@@ -9,7 +9,7 @@ BINMOUNT := -v $(BWD)/bin:$(BWD)/bin
 INPUTSMOUNT := -v $(BWD)/inputs:$(BWD)/inputs
 OUTPUTSMOUNT := -v $(BWD)/outputs:$(BWD)/outputs
 
-INCLUDEMOUNT := -v $(BWD)/../../include/:$(BWD)/include
+INCLUDEMOUNT := -v $(BWD)/../../include/:$(BWD)/sys-include
 
 
 MOUNTS := $(BWDMOUNT) $(BUILDMOUNT) $(BINMOUNT) $(INPUTSMOUNT) $(OUTPUTSMOUNT) $(INCLUDEMOUNT)
@@ -38,12 +38,12 @@ docker: Dockerfile
 prepare:
 	mkdir -p $(BWD)/build
 	mkdir -p $(BWD)/bin
-	mkdir -p $(BWD)/include
+	mkdir -p $(BWD)/sys-include
 
 clean:
 	rm -rf $(BWD)/build
 	rm -rf $(BWD)/bin
-	rm -rf $(BWD)/include
+	rm -rf $(BWD)/sys-include
 	rm -f Dockerfile
 	rm -f src/flecs.c
 
