@@ -9,7 +9,10 @@ BINMOUNT := -v $(BWD)/bin:$(BWD)/bin
 INPUTSMOUNT := -v $(BWD)/inputs:$(BWD)/inputs
 OUTPUTSMOUNT := -v $(BWD)/outputs:$(BWD)/outputs
 
-MOUNTS := $(BWDMOUNT) $(BUILDMOUNT) $(BINMOUNT) $(INPUTSMOUNT) $(OUTPUTSMOUNT)
+INCLUDEMOUNT := -v $(BWD)/../../include/:$(BWD)/include
+
+
+MOUNTS := $(BWDMOUNT) $(BUILDMOUNT) $(BINMOUNT) $(INPUTSMOUNT) $(OUTPUTSMOUNT) $(INCLUDEMOUNT)
 
 all:
 	@echo "make docker - build docker container"
@@ -23,17 +26,28 @@ all:
 env:
 	@echo "$(BWD)"
 
-docker:
+src/flecs.c:
+	cp ../../src/flecs.c src
+
+Dockerfile:
+	cp ../../Dockerfile .
+
+docker: Dockerfile
 	docker build -t buildenv -f Dockerfile .
 
 prepare:
 	mkdir -p $(BWD)/build
+	mkdir -p $(BWD)/bin
+	mkdir -p $(BWD)/include
 
 clean:
 	rm -rf $(BWD)/build
-	rm -rf $(BWD)/bin/*
+	rm -rf $(BWD)/bin
+	rm -rf $(BWD)/include
+	rm -f Dockerfile
+	rm -f src/flecs.c
 
-dockerbash: prepare
+dockerbash: prepare Dockerfile
 	docker run -it --rm -u1000:1000 -e BWD=$(BWD) \
 	           $(MOUNTS) \
 	           buildenv \
@@ -45,13 +59,13 @@ run: prepare
 	           buildenv \
 	           make BWD=$(BWD) -f $(BWD)/src/Makefile run
 
-dockerbuild: prepare
+dockerbuild: prepare Dockerfile src/flecs.c
 	docker run -it --rm -u1000:1000 -e BWD=$(BWD) \
 	           $(MOUNTS) \
 	           buildenv \
 	           make -f $(BWD)/src/Makefile
 
-dockerpandoc: prepare
+dockerpandoc: prepare Dockerfile
 	docker run -it --rm -u1000:1000 -e BWD=$(BWD) \
 	           $(MOUNTS) \
 	           -v $(BWD)/docs/gravity_presentation/:$(BWD)/docs/gravity_presentation/ \
