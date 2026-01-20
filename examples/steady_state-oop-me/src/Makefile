@@ -10,13 +10,14 @@ endif
 
 SRC := $(BWD)/src
 INC := $(BWD)/include
+SYSINC := $(BWD)/sys-include
 OBJ := $(BWD)/bin
 RUNDIR := $(BWD)/outputs
 
 # --- toolchain & flags -------------------------------------------------------
 CXX      ?= g++
 CC       ?= gcc
-CPPFLAGS  = -I$(INC) -MMD -MP
+CPPFLAGS  = -I$(INC) -I$(SYSINC) -MMD -MP
 CXXFLAGS  = -std=gnu++23 -O2 -g -Wall -Wextra -Wpedantic
 # CFLAGS    = -std=c11     -O2 -g -Wall -Wextra -Wpedantic -D_POSIX_C_SOURCE=199309L
 CFLAGS    = -std=gnu99     -O2 -g -Wall -Wextra -Wpedantic

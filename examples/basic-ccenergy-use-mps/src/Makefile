@@ -10,12 +10,14 @@ endif
 
 SRC := $(BWD)/src
 INC := $(BWD)/include
+SYSINC := $(BWD)/sys-include
 OBJ := $(BWD)/bin
+RUNDIR := $(BWD)/outputs
 
 # --- toolchain & flags -------------------------------------------------------
 CXX      ?= g++
 CC       ?= gcc
-CPPFLAGS  = -I$(INC) -MMD -MP
+CPPFLAGS  = -I$(INC) -I$(SYSINC) -MMD -MP
 CXXFLAGS  = -std=gnu++23 -O2 -g -Wall -Wextra -Wpedantic
 # CFLAGS    = -std=c11     -O2 -g -Wall -Wextra -Wpedantic -D_POSIX_C_SOURCE=199309L
 CFLAGS    = -std=gnu99     -O2 -g -Wall -Wextra -Wpedantic
@@ -24,7 +26,7 @@ LDLIBS    = -pthread
 
 # --- sources & objects -------------------------------------------------------
 CXX_SOURCES := $(wildcard $(SRC)/*.cpp)
-#C_SOURCES   := $(SRC)/flecs.c
+C_SOURCES   := $(SRC)/flecs.c
 CXX_OBJECTS := $(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(CXX_SOURCES))
 C_OBJECTS   := $(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(C_SOURCES))
 OBJECTS     := $(C_OBJECTS) $(CXX_OBJECTS)
@@ -54,7 +56,7 @@ clean:
 	$(RM) -f $(OBJECTS) $(DEPS) $(app)
 
 run: all
-	$(app)
+	cd $(RUNDIR) ; $(app)
 
 -include $(DEPS)
 
