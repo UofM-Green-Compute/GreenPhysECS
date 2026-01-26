@@ -1,6 +1,5 @@
 # **GreenPhysECS — Exploring ECS for Physics Simulation with Energy Tracking**
 
-***Please note:** this readme has been through an AI editor to improve the language and scope, but also checked by me (Michael Sparks \- project owner/supervisor) for correctness. Gen AI is generally NOT used in this repo \- since it explores human usability of ECS. Hopefully I’ve caught all the hallucinations, but if you spot any, apologies.*
 
 **GreenPhysECS** is an **experimental exploratory codebase** developed to answer the research question:
 
@@ -161,3 +160,8 @@ Zenodo archival and short academic write-up are anticipated.
 
 If you build on this, please cite the repository and supervisory context.
 
+## Note on AI use
+
+***Please note:** this README has been through an AI editor to improve the language and scope. The content has been checked for correctness - if you spot any errors, please open an issue.*
+
+*Gen AI is generally NOT used in this repo \- since it explores human usability of ECS.*
