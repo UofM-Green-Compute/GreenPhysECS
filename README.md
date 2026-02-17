@@ -1,6 +1,5 @@
 # **GreenPhysECS — Exploring ECS for Physics Simulation with Energy Tracking**
 
-
 **GreenPhysECS** is an **experimental exploratory codebase** developed to answer the research question:
 
 **Can the Entity–Component–System (ECS) model make building physics simulations simpler and more parallel-friendly for early career researchers?**
