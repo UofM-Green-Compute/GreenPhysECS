@@ -14,7 +14,7 @@ of moving or
 #include <random>
 
 double timeStep = 0.1; // time step in s
-int numberOfSteps = 100000; // number of time steps
+int numberOfSteps = 10000; // number of time steps
 double latticeSpacing = 1; // lattice spacing in metres
 // walking speed is in ms-1. if the spacing is latticeSpacing metres than after one second
 // you expect that a person has made speed/latticeSpacing steps. so the probability of moving has to be
@@ -23,7 +23,7 @@ double speed = 1;
 double lambda = speed/latticeSpacing;
 double pStay = exp(-lambda*timeStep); // probability of staying is an exponential with time
 double pMove = 1-pStay; // probability of moving at any time step
-int numberOfPeople = 1; // number of people in our system
+int numberOfPeople = 2; // number of people in our system
 
 int Lx = 50; // x-direction spatial extent of lattice in units of lattice spacing
 int Ly = 50; // y-direction spatial extent of lattice in units of lattice spacing
@@ -58,14 +58,23 @@ double generateProbability() {
 }
 
 int main(int argc, char* argv[]) {
-    std::ofstream MyFile; // Create file variable
-    MyFile.open("position.txt"); // Open text file called "position.txt"
-    if (!MyFile.is_open()) // Ensure file created correctly
+    std::ofstream MyFile1; // Create file variable
+    MyFile1.open("person1.txt"); // Open text file called "position.txt"
+    if (!MyFile1.is_open()) // Ensure file created correctly
     {
         std::cout<<"Error in creating file"<<std::endl; 
         return 1;
     }
-    MyFile << "Time, position_x, position_y" << std::endl; // Set column labels
+    MyFile1 << "Time, position_x, position_y" << std::endl; // Set column labels
+
+    std::ofstream MyFile2; // Person 2
+    MyFile2.open("person2.txt");
+    if (!MyFile2.is_open())
+    {
+        std::cout<<"Error in creating file"<<std::endl; 
+        return 1;
+    }
+    MyFile2 << "Time, position_x, position_y" << std::endl;
 
     flecs::world world(argc, argv);
 
@@ -304,8 +313,10 @@ int main(int argc, char* argv[]) {
         e.remove<BulkTag>(); // We no longer know whether the entity is on lower right corner
         });
     
-    const Position& initialPos = people[0].get<Position>();
-    MyFile << 0 << ", " << initialPos.x << ", " << initialPos.y << std::endl; 
+    const Position& initialPos1 = people[0].get<Position>();
+    MyFile1 << 0 << ", " << initialPos1.x << ", " << initialPos1.y << std::endl; 
+    const Position& initialPos2 = people[1].get<Position>();
+    MyFile2 << 0 << ", " << initialPos2.x << ", " << initialPos2.y << std::endl; 
     for (int i = 1; i <= numberOfSteps; i++) {
         
         world.progress();
@@ -313,7 +324,11 @@ int main(int argc, char* argv[]) {
         std::cout << i << "\n";
         std::cout << "----\n";
         
-        const Position& pos = people[0].get<Position>();
-        MyFile << i*timeStep << ", " << pos.x << ", " << pos.y << std::endl; 
-    }
+        const Position& initialPos1 = people[0].get<Position>();
+        MyFile1 << 0 << ", " << initialPos1.x << ", " << initialPos1.y << std::endl; 
+        const Position& initialPos2 = people[1].get<Position>();
+        MyFile2 << 0 << ", " << initialPos2.x << ", " << initialPos2.y << std::endl; 
+        }
+    MyFile1.close();
+    MyFile2.close();
 }

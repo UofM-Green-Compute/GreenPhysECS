@@ -3,18 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 root_folder = os.path.dirname(os.path.dirname(__file__))
-data_path_SIR = os.path.join(root_folder, "outputs", "position.txt")
-save_path_SIR = os.path.join(root_folder, "outputs", "position.pdf")
+data_path1 = os.path.join(root_folder, "outputs", "person1.txt")
+data_path2 = os.path.join(root_folder, "outputs", "person2.txt")
+save_path = os.path.join(root_folder, "outputs", "position.pdf")
 
-positionFile = np.genfromtxt(data_path_SIR, delimiter = ',', skip_header = 1)
-timeData = positionFile[:, 0]
-xPositionData = positionFile[:, 1]
-yPositionData = positionFile[:, 2]
-print(timeData)
+# Person 1 Data
+positionFile1 = np.genfromtxt(data_path1, delimiter = ',', skip_header = 1)
+timeData = positionFile1[:, 0]
+xPositionData1 = positionFile1[:, 1]
+yPositionData1 = positionFile1[:, 2]
+
+# Person 2 Data
+positionFile2 = np.genfromtxt(data_path2, delimiter = ',', skip_header = 1)
+xPositionData2 = positionFile2[:, 1]
+yPositionData2 = positionFile2[:, 2]
+
 fig, ax = plt.subplots()
-ax.plot(xPositionData,yPositionData,label='Person 1')
+ax.plot(xPositionData1,yPositionData1,label='Person 1')
+ax.plot(xPositionData2,yPositionData2,label='Person 2')
 ax.set_xlim(0, 50)
 ax.set_ylim(0, 50)
 fig.legend(loc='upper center', ncol=3)
-fig.savefig(save_path_SIR)
+fig.savefig(save_path)
 plt.show()
