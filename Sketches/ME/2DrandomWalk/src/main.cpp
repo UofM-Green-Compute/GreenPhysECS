@@ -14,7 +14,7 @@ of moving or
 #include <random>
 
 double timeStep = 0.1; // time step in s
-int numberOfSteps = 1000; // number of time steps
+int numberOfSteps = 100000; // number of time steps
 double latticeSpacing = 1; // lattice spacing in metres
 // walking speed is in ms-1. if the spacing is latticeSpacing metres than after one second
 // you expect that a person has made speed/latticeSpacing steps. so the probability of moving has to be
