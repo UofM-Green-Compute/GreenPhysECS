@@ -12,7 +12,7 @@ and acceleration of each entity for which that is relevant.
 Entity types:
  - Particle
 */
-#include <ccenergy/EnergyTracker.hpp>
+//#include <ccenergy/EnergyTracker.hpp>
 #include <iostream>
 #include <fstream> 
 #include <vector>
@@ -94,17 +94,21 @@ int main(int argc, char* argv[]) {
     flecs::world world(argc, argv);
 
     // Create the energy tracker
+    /*
     ccenergy::EnergyTracker energy_tracker {{ .label = "OnUpdate",
                                               .measure_cpu = true,
                                               .measure_gpu  = false,
                                               .log_to_stdout = false }};
+    */
 
     // Creates Phases which tell the program in which order to run the systems
+    /*
     flecs::entity EnergyStart = world.entity()
         .add(flecs::Phase);
+    */
     flecs::entity RK1 = world.entity()
-        .add(flecs::Phase)
-        .depends_on(EnergyStart);
+        .add(flecs::Phase);
+        //.depends_on(EnergyStart);
     flecs::entity A1 = world.entity()
         .add(flecs::Phase)
         .depends_on(RK1);
@@ -126,9 +130,11 @@ int main(int argc, char* argv[]) {
     flecs::entity A_Update = world.entity()
         .add(flecs::Phase)
         .depends_on(RK_Update);
+    /*
     flecs::entity EnergyEnd = world.entity()
         .add(flecs::Phase)
         .depends_on(A_Update);
+    */
 
     // Create components inside world
     world.component<Index>();
@@ -171,12 +177,13 @@ int main(int argc, char* argv[]) {
                 .set<AccelerationEndPredict>({0})
             );
     }
-
+    /*
     world.system<>()
         .kind(EnergyStart)
         .each([&]() {
             energy_tracker.start();
         });
+    */
     
     world.system<PositionStart, PositionHalfPredict, VelocityStart, VelocityHalfPredict,
                  AccelerationStart>()
@@ -317,11 +324,13 @@ int main(int argc, char* argv[]) {
                                     k_list[ind.i+1], l_list[ind.i], l_list[ind.i+1]);
         });
     
+    /*
      world.system<>()
         .kind(EnergyEnd)
         .each([&]() {
             auto r = energy_tracker.stop();
         });
+    */
     
     
     world.progress();

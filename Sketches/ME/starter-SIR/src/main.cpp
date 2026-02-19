@@ -37,7 +37,7 @@ For the SIR model:
 #include <cmath>
 #include <random>
 
-int N = 100000;
+int N = 30;
 double t = 0; // Set time = 0
 double W1; // Transition rate for infection
 double W2; // Transition rate for recovery
@@ -45,11 +45,11 @@ double lambda; // Decay rate used to find event time
 
 
 // initial (nS, nI, nR)
-std::vector<int> population = {N-5, 5, 0}; 
+std::vector<int> population = {N-1, 1, 0};
 
 // Infection Rate in number of people infected per day per 
 // infected person
-double Beta = 10/static_cast<double>(N); 
+double Beta = 5/static_cast<double>(N);
 
 // Recovery Rate in number of people recovered per day per
 // infected person
@@ -73,7 +73,7 @@ int main() {
     if (!MyFile.is_open()) // Ensure file created correctly
     {
         std::cout<<"Error in creating file"<<std::endl; 
-        return 1; 
+        return 1;
     }
     MyFile << "Time (days), nS, nI, nR" << std::endl; // Set column labels
 

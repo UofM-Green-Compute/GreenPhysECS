@@ -6,7 +6,6 @@ root_folder = os.path.dirname(os.path.dirname(__file__))
 data_path_SIR = os.path.join(root_folder, "outputs", "SIR.txt")
 save_path_SIR = os.path.join(root_folder, "outputs", "SIR.png")
 
-
 SIR_count = np.genfromtxt(data_path_SIR, delimiter = ',', skip_header = 1)
 
 figSIR, axSIR = plt.subplots()
