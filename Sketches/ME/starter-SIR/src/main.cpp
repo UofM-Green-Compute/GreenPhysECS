@@ -43,7 +43,6 @@ double W1; // Transition rate for infection
 double W2; // Transition rate for recovery
 double lambda; // Decay rate used to find event time
 
-
 // initial (nS, nI, nR)
 std::vector<int> population = {N-1, 1, 0};
 
