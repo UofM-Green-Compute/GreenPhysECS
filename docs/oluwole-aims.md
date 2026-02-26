@@ -1,42 +1,29 @@
 # Aim
-* Get a working a working fluid simulation
-  - Produce some visual components such as videos and graphs
-* Get a good grade
-* Understanding of how to make computing greener
-* Final product that is useful for an actual researcher
-  - Including an explanation document 
+[] Gain an understanding of epidemiology and disease spread simulation
+[] Produce a simulation of the spread of an epidemic and connect simulation results to real data.
+[] Include energy / carbon cost tracking 
 
 ## Checkpoints:
-
-  ## Week 8 
-  [] Submit optional draft report outline (20th Nov)
-
-  ## Week 11
-  [] Report deadline (18th Dec)
-  [] Last day of project work
-  [] Lab book assessment period 9th - 18th Dec
-
-  ## January Exam Season - Interview period
+[] Draft report deadline: Tue 3 Mar – 16:00 Thu 26 Mar 2026
+[] Last day of project work: Thu 7 May 2026
+[] Lab book assessment period: Tue 5 May – 16:00 Thu 14 May 2026
+[] Deadline for report submission: 16:00 Thu 14 May 2026
+[] Interview period: Mon 25 May – Wed 10 Jun 2026
 
 ## Progress 
-  ## Started
+  ## Done 
   [x] Set up build environment on personal computer
-  [x] Decided on starter project to get familiar with flecs
-  [x] Decided on direction for main project simulation
 
-  ## First results
-  [x] Produced starter project - coupled oscilator system 
-      [x] Working calcualtions for coupled oscillator system implemented using ECS
-      [x] Successfully write data to a file
-      [x] Read data from file and animate in python
-
-  ## Up Next
-  [] Deadline Week 7: Complete a simple fluid simulation and produce result (e.g graph)
+  ## Doing 
+  [x] Starter project (Basic SIR model)
+  [] Additional features to the SIR model 
+    - People moving along a random walk 
 
   ## Further down the line
-  [] Animation of fluid process 
-  [] Simulate flow past a circle
-  [] Include viscosity in flow past a circle 
+  [] Additional features to the SIR model 
+    - Spatial dependence of infection
+    - Implementing vaccinations 
+  [] Compare simulation results to real data 
 
   ## ....any further steps
 
