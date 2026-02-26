@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 root_folder = os.path.dirname(os.path.dirname(__file__))
-data_path_SIR = os.path.join(root_folder, "outputs", "SIR.txt")
+data_path_SIR = os.path.join(root_folder, "outputs", "SIRmacroscopic.txt")
 save_path_SIR = os.path.join(root_folder, "outputs", "SIR.pdf")
 
 SIR_count = np.genfromtxt(data_path_SIR, delimiter = ',', skip_header = 1)

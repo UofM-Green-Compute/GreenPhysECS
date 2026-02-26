@@ -37,7 +37,7 @@ For the SIR model:
 #include <cmath>
 #include <random>
 
-int N = 30;
+int N = 100;
 double t = 0; // Set time = 0
 double W1; // Transition rate for infection
 double W2; // Transition rate for recovery
@@ -48,7 +48,7 @@ std::vector<int> population = {N-1, 1, 0};
 
 // Infection Rate in number of people infected per day per 
 // infected person
-double Beta = 5/static_cast<double>(N);
+double Beta = 3/static_cast<double>(N);
 
 // Recovery Rate in number of people recovered per day per
 // infected person
@@ -68,13 +68,15 @@ double generateTau(double generatingLambda)
 int main() {
 
     std::ofstream MyFile; // Create file variable
-    MyFile.open("SIR.txt"); // Open text file called "SIR.txt"
+    MyFile.open("SIRmacroscopic.txt"); // Open text file called "SIR.txt"
     if (!MyFile.is_open()) // Ensure file created correctly
     {
         std::cout<<"Error in creating file"<<std::endl; 
         return 1;
     }
-    MyFile << "Time (days), nS, nI, nR" << std::endl; // Set column labels
+    MyFile << "Time,Susceptible,Infected,Recovered" << std::endl; // Set column labels
+    MyFile << t << "," << population[0] << "," << population[1] << "," << 
+        population[2] << std::endl; // Initial data
 
     while (population[1]>0) {
         W1 = Beta * population[0] * population[1]; // Transition rate (infection)
@@ -93,9 +95,9 @@ int main() {
             population[1] -= 1;
             population[2] += 1;
         }
-        std::cout << t << ", " << population[0] << ", " << population[1] << "," << 
+        std::cout << t << "," << population[0] << "," << population[1] << "," << 
         population[2] <<"\n";
-        MyFile << t << ", " << population[0] << ", " << population[1] << "," << 
+        MyFile << t << "," << population[0] << "," << population[1] << "," << 
         population[2] << std::endl;
     }
     MyFile.close();
