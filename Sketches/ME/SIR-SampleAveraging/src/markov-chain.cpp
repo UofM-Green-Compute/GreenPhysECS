@@ -13,7 +13,6 @@ Mattias Evans
 #include <numeric>
 #include <algorithm>
 
-
 int N = 100; // Total number of people
 double timeStep = 0.0001; // Set timestep = 0.0001
 double maxTime = 10; // Maximum Simulation Time
@@ -144,7 +143,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
             }
         });
     while (t+timeStep<maxTime) {
-        std::cout<<"t = "<<t<<" days"<<std::endl;
+        std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
         world.progress();
         t += timeStep;
         timeArray.push_back(t);
@@ -165,7 +164,6 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
         population2.push_back(population[1]);
         population3.push_back(population[2]);  
     }
-    std::cout<<"t = "<<t<<" days"<<std::endl;
 }
 
 double findMean(std::vector<int> intArray) {
@@ -180,43 +178,52 @@ double findSTD(std::vector<int> intArray, double mean) {
         varianceSum += std::pow(static_cast<double>(value) - mean, 2);
     }
     double variance = static_cast<double>(varianceSum) / intArray.size();
-
     double standardDeviation = std::sqrt(variance);
-
     return standardDeviation;
-    
 }
 
 int main(int argc, char* argv[]) {
+    std::ofstream MyFileSample;
+    MyFileSample.open("sample.txt");
     std::ofstream MyFile1;
     MyFile1.open("state1.txt"); 
     std::ofstream MyFile2;
     MyFile2.open("state2.txt");
     std::ofstream MyFile3;
     MyFile3.open("state3.txt");
+
+    MyFileSample << "time,susceptible,infected,recovered" << std::endl; // Set column labels
     MyFile1 << "time,state1Mean,state1STD" << std::endl; // Set column labels
     MyFile2 << "time,state2Mean,state2STD" << std::endl; // Set column labels
     MyFile3 << "time,State3Mean,state3STD" << std::endl; // Set column labels
     // These vectors are population versus time for a single individual sample
     std::vector<double> individualTimes;
-    std::vector<int> individualPopulation1;
-    std::vector<int> individualPopulation2;
-    std::vector<int> individualPopulation3;
+    std::vector<int> individualPopulation1; // Susceptible
+    std::vector<int> individualPopulation2; // Infected
+    std::vector<int> individualPopulation3; // Recovered
 
     double timeSamples;
     // this is a vector of individualPopulation vectors for each individual sample
-    std::vector<std::vector<int>> populationSamples1;
-    std::vector<std::vector<int>> populationSamples2;
-    std::vector<std::vector<int>> populationSamples3;
+    std::vector<std::vector<int>> populationSamples1; // Susceptible
+    std::vector<std::vector<int>> populationSamples2; // Infected
+    std::vector<std::vector<int>> populationSamples3; // Recovered
 
     // Run the simulation 10 times
     while (sampleCounter <= sampleNumber){
+        std::cout<<sampleCounter<<"\n";
         runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
             individualTimes);
-        sampleCounter += 1;
-        populationSamples1.push_back(individualPopulation1);
-        populationSamples2.push_back(individualPopulation2);
-        populationSamples3.push_back(individualPopulation3);
+        // Record the first sample as an individual case
+        if (sampleCounter == 1){
+            for(const int& i : individualPopulation1) {
+                MyFile1 << i*timeStep << "," << individualPopulation1[i] << "," << 
+                individualPopulation2[i] << "," << individualPopulation3[i] << std::endl; 
+            }
+        }
+        sampleCounter += 1; // increase sample counter
+        populationSamples1.push_back(individualPopulation1); // record susceptible population vector
+        populationSamples2.push_back(individualPopulation2); // record infected population vector
+        populationSamples3.push_back(individualPopulation3); // record recovered population vector   
     }
 
     // declare mean and standard deviation of variables as a function of time
@@ -232,12 +239,10 @@ int main(int argc, char* argv[]) {
     std::vector<int> values2; //values which will be used to compute standard deviation and mean of infected
     std::vector<int> values3; //values which will be used to compute standard deviation and mean of recovered
     for (int i=0; i<vectorTimeLength; i++) {
-        for (int j = 0; j<sampleNumber; j++) {
-              
+        for (int j = 0; j<sampleNumber; j++) {   
             values1.push_back(populationSamples1[j][i]);
             values2.push_back(populationSamples2[j][i]);
-            values3.push_back(populationSamples3[j][i]);
-            
+            values3.push_back(populationSamples3[j][i]); 
         }
         double mean1 = findMean(values1); // mean number of susceptible people
         population1Mean.push_back(mean1);
@@ -252,7 +257,7 @@ int main(int argc, char* argv[]) {
         double std3 = findSTD(values3, mean3); // standard deviation of recovered people
         population3STD.push_back(std3);
         timeSamples = i*timeStep;
-        std::cout<< timeSamples<<"hello\n";
+
         // write data to txt file
         MyFile1 << timeSamples << "," << mean1 << "," << std1 << std::endl; 
         MyFile2 << timeSamples << "," << mean2 << "," << std2 << std::endl; 
