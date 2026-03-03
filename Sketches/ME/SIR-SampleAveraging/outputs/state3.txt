@@ -1,0 +1,1 @@
+time,State3Mean,state3STD
