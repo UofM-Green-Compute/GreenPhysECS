@@ -215,11 +215,12 @@ int main(int argc, char* argv[]) {
             individualTimes);
         // Record the first sample as an individual case
         if (sampleCounter == 1){
-            for(const int& i : individualPopulation1) {
-                MyFile1 << i*timeStep << "," << individualPopulation1[i] << "," << 
+            for(int i = 0; i < (int) individualPopulation1.size(); i++) {
+                MyFileSample << i*timeStep << "," << individualPopulation1[i] << "," << 
                 individualPopulation2[i] << "," << individualPopulation3[i] << std::endl; 
             }
         }
+        MyFileSample.close();
         sampleCounter += 1; // increase sample counter
         populationSamples1.push_back(individualPopulation1); // record susceptible population vector
         populationSamples2.push_back(individualPopulation2); // record infected population vector
