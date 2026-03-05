@@ -14,8 +14,8 @@ Mattias Evans
 #include <algorithm>
 
 int N = 100; // Total number of people
-double timeStep = 0.0001; // Set timestep = 0.0001
-double maxTime = 10; // Maximum Simulation Time
+double timeStep = 0.005; // Set timestep = 0.0001
+double maxTime = 5; // Maximum Simulation Time
 
 int sampleCounter = 1; // Set sample counter = 1
 int sampleNumber = 100; // total number of samples
@@ -193,9 +193,9 @@ int main(int argc, char* argv[]) {
     MyFile3.open("state3.txt");
 
     MyFileSample << "time,susceptible,infected,recovered" << std::endl; // Set column labels
-    MyFile1 << "time,state1Mean,state1STD" << std::endl; // Set column labels
-    MyFile2 << "time,state2Mean,state2STD" << std::endl; // Set column labels
-    MyFile3 << "time,State3Mean,state3STD" << std::endl; // Set column labels
+    MyFile1 << "time,state1Mean,state1lower,state1upper" << std::endl; // Set column labels
+    MyFile2 << "time,state2Mean,state2lower,state2upper" << std::endl; // Set column labels
+    MyFile3 << "time,state3Mean,state3lower,state3upper" << std::endl; // Set column labels
     // These vectors are population versus time for a single individual sample
     std::vector<double> individualTimes;
     std::vector<int> individualPopulation1; // Susceptible
@@ -210,7 +210,6 @@ int main(int argc, char* argv[]) {
 
     // Run the simulation 10 times
     while (sampleCounter <= sampleNumber){
-        std::cout<<sampleCounter<<"\n";
         runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
             individualTimes);
         // Record the first sample as an individual case
@@ -260,9 +259,9 @@ int main(int argc, char* argv[]) {
         timeSamples = i*timeStep;
 
         // write data to txt file
-        MyFile1 << timeSamples << "," << mean1 << "," << std1 << std::endl; 
-        MyFile2 << timeSamples << "," << mean2 << "," << std2 << std::endl; 
-        MyFile3 << timeSamples << "," << mean3 << "," << std3 << std::endl; 
+        MyFile1 << timeSamples << "," << mean1 << "," << mean1-std1 << "," << mean1+std1 << std::endl; 
+        MyFile2 << timeSamples << "," << mean2 << "," << mean2-std2 << "," << mean2+std2 << std::endl;  
+        MyFile3 << timeSamples << "," << mean3 << "," << mean3-std3 << "," << mean3+std3 << std::endl;  
 
         // reset values vector
         values1.clear();
