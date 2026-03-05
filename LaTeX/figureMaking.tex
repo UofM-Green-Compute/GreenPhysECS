@@ -347,5 +347,33 @@
 \caption{Ensemble averaged SIR model with $\beta/N$ people infected per day per infected person per susceptible person and $\gamma=1$ people recovered per day per infected person, where $N=100$ is the total population. $I_0$ people are infected at $t=0$ and the rest of the population is susceptible. (a): $\beta=7$, $I_0=1$; (b): $\beta=7$, $I_0=10$. Figures produced by M. G. Hauge Evans.}
 \label{fig:macroscopicSIREnsemble}
 \end{figure}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+	legend columns=3,
+      	legend entries={Person 1, Person2},
+       	legend to name=namedLegendRandomWalk,
+	unit vector ratio*=1 1 1,
+        	enlarge x limits=false,
+	enlarge y limits=false,
+        	xlabel = $x$ (m),
+        	ylabel = $y$ (m),
+	ylabel near ticks,
+	xlabel near ticks,
+	xmin=0,
+	xmax=50,
+	ymin=0, 
+	ymax=50
+]
+	\addplot+[color=matplotlibBlue,mark=none,line width=1pt]
+	table[x=position_x,y=position_y,col sep=comma]{person1.txt};
+	\addplot+[color=matplotlibOrange,mark=none,line width=1pt]
+	table[x=position_x,y=position_y,col sep=comma]{person2.txt};
+\end{axis}
+\end{tikzpicture}
+\caption{Random Walk Plot. Figures produced by M. G. Hauge Evans.}
+\label{fig:randomWalkPlot}
+\end{figure}
 \end{document}

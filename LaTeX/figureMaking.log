@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.19)  3 MAR 2026 16:17
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.10.19)  5 MAR 2026 10:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -767,21 +767,25 @@ Overfull \hbox (2.61108pt too wide) in paragraph at lines 252--347
 [] [] 
  []
 
+PGFPlots: reading {person1.txt}
+PGFPlots: reading {person2.txt}
 
 
 [4]
 
-[5] (figureMaking.aux)
+[5]
+
+[6] (figureMaking.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-09-02>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 25430 strings out of 468081
- 674865 string characters out of 5425788
- 2919234 words of memory out of 5000000
- 53712 multiletter control sequences out of 15000+600000
+ 25447 strings out of 468081
+ 675265 string characters out of 5425788
+ 4927071 words of memory out of 5000000
+ 53725 multiletter control sequences out of 15000+600000
  631678 words of font info for 53 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,16n,91p,5588b,2245s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -793,9 +797,9 @@ ublic/amsfonts/cm/cmmi8.pfb><C:/Users/matti/AppData/Local/Programs/MiKTeX/fonts
 eX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/matti/AppData/Local/Progr
 ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/matti/AppData/Loca
 l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on figureMaking.pdf (5 pages, 297319 bytes).
+Output written on figureMaking.pdf (6 pages, 304607 bytes).
 PDF statistics:
- 56 PDF objects out of 1000 (max. 8388607)
+ 59 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
