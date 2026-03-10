@@ -1,5 +1,5 @@
 /*
-This is a random walk SIR program
+This code ensemble averages the random walk SIR code.
 
 There are 13 systems
 System 1: Update infection matrix so entities can see number of infected people on their tile
@@ -37,16 +37,18 @@ double pStay = exp(-lambda*timeStep); // probability of staying is an exponentia
 double pMove = 1-pStay; // probability of moving at any time step
 int numberOfPeople = 100; // number of people in our system
 
+// ensemble parameters
+int sampleCounter = 1; // Set sample counter = 1
+int sampleNumber = 100; // total number of samples
+
 // Transition constants
 double beta = 10 / static_cast<double>(numberOfPeople); // infection rate
 double alpha = 0.001; // recovery rate
 
 // initial populations (n1, n2, n3)
-int n2 = 1; // State 2 (infected)
+int n2 = 10; // State 2 (infected)
 int n1 = numberOfPeople-n2; // State 1 (susceptible)
 int n3 = 0; // State 3 (recovered)
-std::vector<int> population = {n1, n2, n3}; // where population updates occur
-std::vector<std::vector<int>> infectionMatrix; // number of infected people at each point in space
 
 int Lx = 50; // x-direction spatial extent of lattice in units of lattice spacing
 int Ly = 50; // y-direction spatial extent of lattice in units of lattice spacing
@@ -84,34 +86,16 @@ double generateProbability() {
     return distrib(gen);
 }
 
-int main(int argc, char* argv[]) {
+void runModel(int argc, char* argv[], std::vector<int> &population1, 
+    std::vector<int> &population2, std::vector<int> &population3, std::vector<double> &timeArray) {
+    // preamble
     double t = 0; // initialize time = 0
-    std::ofstream MyFilePerson1; // Create file variable
-    MyFilePerson1.open("person1.txt"); // Open text file called "position.txt"
-    if (!MyFilePerson1.is_open()) // Ensure file created correctly
-    {
-        std::cout<<"Error in creating file"<<std::endl; 
-        return 1;
-    }
-    MyFilePerson1 << "Time, position_x, position_y" << std::endl; // Set column labels
-
-    std::ofstream MyFilePerson2; // Person 2
-    MyFilePerson2.open("person2.txt");
-    if (!MyFilePerson2.is_open())
-    {
-        std::cout<<"Error in creating file"<<std::endl; 
-        return 1;
-    }
-    MyFilePerson2 << "Time, position_x, position_y" << std::endl;
-
-    std::ofstream MyFileInfection; // Create file variable
-    MyFileInfection.open("SIR.txt"); // Open text file called "SIR.txt"
-    if (!MyFileInfection.is_open()) // Ensure file created correctly
-    {
-        std::cout<<"Error in creating file"<<std::endl; 
-        return 1;
-    }
-    MyFileInfection << "Time,Susceptible,Infected,Recovered" << std::endl; // Set column labels
+    timeArray = {0};
+    std::vector<int> population = {n1, n2, n3}; // nS, nI, NR
+    std::vector<std::vector<int>> infectionMatrix; // number of infected people at each point in space
+    population1 = {n1};
+    population2 = {n2};
+    population3 = {n3};
 
     flecs::world world(argc, argv);
 
@@ -459,15 +443,6 @@ int main(int argc, char* argv[]) {
         //std::cout<<"Segmentation Fault??? 13"<<"\n";
         });
     
-    // write initial data to file
-    const Position& initialPos1 = people[0].get<Position>();
-    MyFilePerson1 << 0 << ", " << initialPos1.x << ", " << initialPos1.y << std::endl; 
-    const Position& initialPos2 = people[1].get<Position>();
-    MyFilePerson2 << 0 << ", " << initialPos2.x << ", " << initialPos2.y << std::endl; 
-    MyFileInfection << 0 << "," << population[0] << "," << population[1] << "," << 
-    population[2] << std::endl; // Initial data
-    
-    
     for (int i = 0; i<=Lx; i++) {
         infectionMatrix.push_back({});
         for (int j = 0; j<=Ly; j++) {
@@ -475,21 +450,14 @@ int main(int argc, char* argv[]) {
         }
     }
     while (t<maxTime) {
-        t += timeStep;
+        std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
         world.progress();
-        
-        // write data to file
-        const Position& initialPos1 = people[0].get<Position>();
-        MyFilePerson1 << t << ", " << initialPos1.x << ", " << initialPos1.y << std::endl; 
-        const Position& initialPos2 = people[1].get<Position>();
-        MyFilePerson2 << t << ", " << initialPos2.x << ", " << initialPos2.y << std::endl; 
-        MyFileInfection << t << "," << population[0] << "," << population[1] << "," << 
-        population[2] << std::endl;
-
-        // Print
-        std::cout << t << "," << population[0] << "," << population[1] << "," << 
-        population[2] <<"\n";
-        std::cout << "----\n";
+        t += timeStep;
+        // update sample variables
+        timeArray.push_back(t);
+        population1.push_back(population[0]);
+        population2.push_back(population[1]);
+        population3.push_back(population[2]);  
         // reset infection matrix
         for (int i = 0; i<=Lx; i++) {
             for (int j = 0; j<=Ly; j++) {
@@ -497,7 +465,117 @@ int main(int argc, char* argv[]) {
             }
         }
         }
-    MyFilePerson1.close();
-    MyFilePerson2.close();
-    MyFileInfection.close();
+}
+
+double findMean(std::vector<int> intArray) {
+    double intArraySum = std::accumulate(intArray.begin(), intArray.end(), 0.0);
+    double intArrayMean = static_cast<double>(intArraySum) / intArray.size();
+    return intArrayMean;
+}
+
+double findSTD(std::vector<int> intArray, double mean) {
+    double varianceSum = 0.0;
+    for (int value : intArray) {
+        varianceSum += std::pow(static_cast<double>(value) - mean, 2);
+    }
+    double variance = static_cast<double>(varianceSum) / intArray.size();
+    double standardDeviation = std::sqrt(variance);
+    return standardDeviation;
+}
+
+int main(int argc, char* argv[]) {
+    // Infection Files
+    std::ofstream MyFileSample;
+    MyFileSample.open("sample.txt");
+    std::ofstream MyFile1;
+    MyFile1.open("state1.txt"); 
+    std::ofstream MyFile2;
+    MyFile2.open("state2.txt");
+    std::ofstream MyFile3;
+    MyFile3.open("state3.txt");
+
+    MyFileSample << "time,susceptible,infected,recovered" << std::endl; // Set column labels
+    MyFile1 << "time,state1Mean,state1lower,state1upper" << std::endl; // Set column labels
+    MyFile2 << "time,state2Mean,state2lower,state2upper" << std::endl; // Set column labels
+    MyFile3 << "time,state3Mean,state3lower,state3upper" << std::endl; // Set column labels
+    // These vectors are population versus time for a single individual sample
+    std::vector<double> individualTimes;
+    std::vector<int> individualPopulation1; // Susceptible
+    std::vector<int> individualPopulation2; // Infected
+    std::vector<int> individualPopulation3; // Recovered
+
+    double timeSamples;
+    // this is a vector of individualPopulation vectors for each individual sample
+    std::vector<std::vector<int>> populationSamples1; // Susceptible
+    std::vector<std::vector<int>> populationSamples2; // Infected
+    std::vector<std::vector<int>> populationSamples3; // Recovered
+
+    // Run the simulation 10 times
+    clock_t tClock;
+    tClock = clock();  
+    while (sampleCounter <= sampleNumber){
+        runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
+            individualTimes);
+        // Record the first sample as an individual case
+        if (sampleCounter == 1){
+            for(int i = 0; i < (int) individualPopulation1.size(); i++) {
+                MyFileSample << i*timeStep << "," << individualPopulation1[i] << "," << 
+                individualPopulation2[i] << "," << individualPopulation3[i] << std::endl; 
+            }
+        }
+        MyFileSample.close();
+        sampleCounter += 1; // increase sample counter
+        populationSamples1.push_back(individualPopulation1); // record susceptible population vector
+        populationSamples2.push_back(individualPopulation2); // record infected population vector
+        populationSamples3.push_back(individualPopulation3); // record recovered population vector   
+    }
+    tClock = clock() - tClock; 
+    double time_taken = ((double)tClock) / CLOCKS_PER_SEC;
+    std::cout<<"RUN TIME: "<<time_taken<<"s"<<std::endl;
+
+    // declare mean and standard deviation of variables as a function of time
+    std::vector<double> population1Mean;
+    std::vector<double> population1STD;
+    std::vector<double> population2Mean;
+    std::vector<double> population2STD;
+    std::vector<double> population3Mean;
+    std::vector<double> population3STD;
+
+    int vectorTimeLength = populationSamples1[0].size(); // how many time entries are there
+    std::vector<int> values1; //values which will be used to compute standard deviation and mean of susceptible
+    std::vector<int> values2; //values which will be used to compute standard deviation and mean of infected
+    std::vector<int> values3; //values which will be used to compute standard deviation and mean of recovered
+    for (int i=0; i<vectorTimeLength; i++) {
+        for (int j = 0; j<sampleNumber; j++) {   
+            values1.push_back(populationSamples1[j][i]);
+            values2.push_back(populationSamples2[j][i]);
+            values3.push_back(populationSamples3[j][i]); 
+        }
+        double mean1 = findMean(values1); // mean number of susceptible people
+        population1Mean.push_back(mean1);
+        double std1 = findSTD(values1, mean1); // standard deviation of susceptible people
+        population1STD.push_back(std1);
+        double mean2 = findMean(values2); // mean number of infected people
+        population2Mean.push_back(mean1);
+        double std2 = findSTD(values2, mean2); // standard deviation of infected people
+        population2STD.push_back(std2);
+        double mean3 = findMean(values3); // mean number of recovered people
+        population3Mean.push_back(mean1);
+        double std3 = findSTD(values3, mean3); // standard deviation of recovered people
+        population3STD.push_back(std3);
+        timeSamples = i*timeStep;
+
+        // write data to txt file
+        MyFile1 << timeSamples << "," << mean1 << "," << mean1-std1 << "," << mean1+std1 << std::endl; 
+        MyFile2 << timeSamples << "," << mean2 << "," << mean2-std2 << "," << mean2+std2 << std::endl;  
+        MyFile3 << timeSamples << "," << mean3 << "," << mean3-std3 << "," << mean3+std3 << std::endl;  
+
+        // reset values vector
+        values1.clear();
+        values2.clear();
+        values3.clear();
+    }
+    MyFile1.close();
+    MyFile2.close();
+    MyFile3.close();
 }

@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 rootFolder = os.path.dirname(os.path.dirname(__file__))
-dataPathState1 = os.path.join(rootFolder, "outputs", "SIR.txt")
-savePathSIR = os.path.join(rootFolder, "outputs", "SIR.pdf")
+dataPathState1 = os.path.join(rootFolder, "outputs", "sample.txt")
+savePathSIR = os.path.join(rootFolder, "outputs", "SIRsample.pdf")
 
 data  = np.genfromtxt(dataPathState1, delimiter = ',', skip_header = 1)
 time = data[:,0]

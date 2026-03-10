@@ -1,0 +1,1 @@
+time,state3Mean,state3lower,state3upper
