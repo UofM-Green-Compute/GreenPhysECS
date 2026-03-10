@@ -26,8 +26,8 @@ double pMove = 1-pStay; // probability of moving at any time step
 int numberOfPeople = 100; // number of people in our system
 
 // Transition constants
-double beta = 100000 / static_cast<double>(numberOfPeople); // infection rate
-double alpha = 0.0000001; // recovery rate
+double beta = 10 / static_cast<double>(numberOfPeople); // infection rate
+double alpha = 0.001; // recovery rate
 
 // initial populations (n1, n2, n3)
 int n2 = 1; // State 2 (infected)
@@ -205,9 +205,6 @@ int main(int argc, char* argv[]) {
         // find number of infected people on your and update probabilities
         if (state.s == 1) {
             int infectedContact = infectionMatrix[pos.x][pos.y];
-            if (infectedContact > 0) {
-                std::cout<<exp(-beta * infectedContact * timeStep)<<"\n";
-            }
             prob.q1 = exp(-beta * infectedContact * timeStep);
             prob.q2 = 1-prob.q1;
             prob.q3 = 0;
@@ -229,14 +226,16 @@ int main(int argc, char* argv[]) {
                     population[2] -= 1;  
                 }
                 state.s = 1;
-            } else if( (rand > prob.q2) && (rand < (prob.q1 + prob.q2))){
+            } else if((rand > prob.q1) && (rand < (prob.q1 + prob.q2))){
                 // transition to state 2 (infected)
                 if (state.s == 1) {
                     population[1] += 1;
-                    population[0] -= 1;  
+                    population[0] -= 1;
+                    e.add<InfectedTag>();
                 } else if (state.s == 3) {
                     population[1] += 1;
                     population[2] -= 1;  
+                    e.add<InfectedTag>();
                 }
                 state.s = 2;
                 prob.q1 = 0;
@@ -246,7 +245,7 @@ int main(int argc, char* argv[]) {
                 // transition to state 3 (recovered)
                 if (state.s == 1) {
                     population[2] += 1;
-                    population[0] -= 1;  
+                    population[0] -= 1;
                 } else if (state.s == 2) {
                     population[2] += 1;
                     population[1] -= 1;
