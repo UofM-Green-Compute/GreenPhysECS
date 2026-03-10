@@ -4,7 +4,7 @@ Oluwole Delano
 Mattias Evans
 26/02/26
 */
-
+#include <ccenergy/EnergyTracker.hpp>
 #include <flecs.h>
 #include <iostream>
 #include <fstream>
@@ -35,7 +35,8 @@ struct State { int s; };
 struct MarkovProbabilities { double q1, q2, q3; }; 
 
 void runModel(int argc, char* argv[], std::vector<int> &population1, 
-    std::vector<int> &population2, std::vector<int> &population3, std::vector<double> &timeArray) {   
+    std::vector<int> &population2, std::vector<int> &population3, std::vector<double> &timeArray,
+    ccenergy::EnergyTracker &energy_tracker) {   
     double t = 0; // initialize time = 0
     timeArray = {0};
     std::vector<int> population = {n1, n2, n3}; // nS, nI, NR
@@ -58,7 +59,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
 
     // Initialise flecs world
     flecs::world world(argc,argv);
-    world.set_threads(1); 
+    //world.set_threads(1); 
 
     // Creating components
     world.component<State>();
@@ -89,9 +90,15 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
         );
     }  
 
+    world.system<>()
+        .each([&]() {
+            // start once per frame
+            energy_tracker.start();
+        });
+
     // Update Entity Transition Probabilities
     world.system<State, MarkovProbabilities>()
-        .multi_threaded()
+        //.multi_threaded()
         .each([&](State& state, MarkovProbabilities&prob){
             if (state.s == 1){
                 prob.q1 = Q11;
@@ -110,7 +117,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
     
     // Update State
     world.system<State, MarkovProbabilities>()
-        .multi_threaded()
+        //.multi_threaded()
         .each([&](State& state, MarkovProbabilities&prob){
             double rand = dist(rng);
             if(rand < prob.q1){
@@ -144,6 +151,10 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
                 }
                 state.s = 3;
             }
+        });
+    world.system<>()
+        .each([&]() {
+            auto r = energy_tracker.stop();
         });
     while (t+timeStep<maxTime) {
         std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
@@ -214,9 +225,14 @@ int main(int argc, char* argv[]) {
     // Run the simulation 10 times
     clock_t tClock;
     tClock = clock();  
+    // Create the energy tracker
+    ccenergy::EnergyTracker energyTracker {{ .label = "OnUpdate",
+                                              .measure_cpu = true,
+                                              .measure_gpu  = false,
+                                              .log_to_stdout = false }};
     while (sampleCounter <= sampleNumber){
         runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
-            individualTimes);
+            individualTimes, energyTracker);
         // Record the first sample as an individual case
         if (sampleCounter == 1){
             for(int i = 0; i < (int) individualPopulation1.size(); i++) {
@@ -230,6 +246,8 @@ int main(int argc, char* argv[]) {
         populationSamples2.push_back(individualPopulation2); // record infected population vector
         populationSamples3.push_back(individualPopulation3); // record recovered population vector   
     }
+    // Reporting the information from the energy tracker
+    std::cout << energyTracker.mkReport() << std::endl;
     tClock = clock() - tClock; 
     double time_taken = ((double)tClock) / CLOCKS_PER_SEC;
     std::cout<<"RUN TIME: "<<time_taken<<"s"<<std::endl;
