@@ -26,8 +26,8 @@ double pMove = 1-pStay; // probability of moving at any time step
 int numberOfPeople = 100; // number of people in our system
 
 // Transition constants
-double beta = 10 / static_cast<double>(numberOfPeople); 
-double alpha = 0.001; 
+double beta = 100000 / static_cast<double>(numberOfPeople); // infection rate
+double alpha = 0.0000001; // recovery rate
 
 // initial populations (n1, n2, n3)
 int n2 = 1; // State 2 (infected)
@@ -55,7 +55,6 @@ struct UpperLeftTag{};
 struct UpperRightTag{};
 struct LowerLeftTag{};
 struct LowerRightTag{};
-
 
 int generatePosition(int length) {
     // generates a random position on the lattice
@@ -164,7 +163,6 @@ int main(int argc, char* argv[]) {
     world.component<UpperRightTag>();
     world.component<LowerLeftTag>();
     world.component<LowerRightTag>();
-    
 
     // Initialize the people
     std::vector<flecs::entity> people;
@@ -197,18 +195,23 @@ int main(int argc, char* argv[]) {
         .with<InfectedTag>()
         .each([&](Position &pos){
             infectionMatrix[pos.x][pos.y]+=1;
+            //std::cout<<"Segmentation fault??? 1"<<"\n";
         });
 
     // update susceptible markov probabilities
     world.system<State, MarkovProbabilities, Position>()
         .kind(markovPhase)
         .each([&](State &state, MarkovProbabilities& prob, Position &pos){
-        // find number of infected people on your tile
+        // find number of infected people on your and update probabilities
         if (state.s == 1) {
             int infectedContact = infectionMatrix[pos.x][pos.y];
+            if (infectedContact > 0) {
+                std::cout<<exp(-beta * infectedContact * timeStep)<<"\n";
+            }
             prob.q1 = exp(-beta * infectedContact * timeStep);
             prob.q2 = 1-prob.q1;
             prob.q3 = 0;
+            //std::cout<<"Segmentation Fault??? 2"<<"\n";
         }
         });
 
@@ -253,6 +256,7 @@ int main(int argc, char* argv[]) {
                 prob.q1 = 0;
                 prob.q2 = 0;
                 prob.q3 = 1;
+                //std::cout<<"Segmentation Fault??? 3"<<"\n";
             }
         });
 
@@ -279,6 +283,7 @@ int main(int argc, char* argv[]) {
             } else {
                 e.add<BulkTag>();
             }
+            //std::cout<<"Segmentation Fault??? 4"<<"\n";
         });
     
     world.system<Position>()
@@ -297,6 +302,7 @@ int main(int argc, char* argv[]) {
             pos.y +=1;
         } // Else Event 4: Stay still
         e.remove<LeftTag>(); // We no longer know whether the entity is on the left wall
+        //std::cout<<"Segmentation Fault??? 5"<<"\n";
         });
     
     world.system<Position>()
@@ -315,6 +321,7 @@ int main(int argc, char* argv[]) {
             pos.x +=1;
         } // Else Event 4: Stay still
         e.remove<UpTag>(); // We no longer know whether the entity is on the upper wall
+        //std::cout<<"Segmentation Fault??? 6"<<"\n";
         });
 
     world.system<Position>()
@@ -333,6 +340,7 @@ int main(int argc, char* argv[]) {
             pos.y +=1;
         } // Else Event 4: Stay still
         e.remove<RightTag>(); // We no longer know whether the entity is on the right wall
+        //std::cout<<"Segmentation Fault??? 7"<<"\n";
         });
 
     world.system<Position>()
@@ -351,6 +359,7 @@ int main(int argc, char* argv[]) {
             pos.x +=1;
         } // Else Event 4: Stay still
         e.remove<DownTag>(); // We no longer know whether the entity is on the lower wall
+        //std::cout<<"Segmentation Fault??? 8"<<"\n";
         });
 
     world.system<Position>()
@@ -366,6 +375,7 @@ int main(int argc, char* argv[]) {
             pos.y += 1;
         } // Else Event 3: Stay still
         e.remove<UpperLeftTag>(); // We no longer know whether the entity is on upper left corner
+        //std::cout<<"Segmentation Fault??? 9"<<"\n";
         });
     
     world.system<Position>()
@@ -381,6 +391,7 @@ int main(int argc, char* argv[]) {
             pos.y += 1;
         } // Else Event 3: Stay still
         e.remove<UpperRightTag>(); // We no longer know whether the entity is on upper right corner
+        //std::cout<<"Segmentation Fault??? 10"<<"\n";
         });
 
     world.system<Position>()
@@ -396,10 +407,11 @@ int main(int argc, char* argv[]) {
             pos.y -= 1;
         } // Else Event 3: Stay still
         e.remove<LowerLeftTag>(); // We no longer know whether the entity is on lower left corner
+        //std::cout<<"Segmentation Fault??? 11"<<"\n";
         });
     
     world.system<Position>()
-        .with<LowerLeftTag>()
+        .with<LowerRightTag>()
         .kind(downRightCornerMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
@@ -411,6 +423,7 @@ int main(int argc, char* argv[]) {
             pos.y -= 1;
         } // Else Event 3: Stay still
         e.remove<LowerRightTag>(); // We no longer know whether the entity is on lower right corner
+        //std::cout<<"Segmentation Fault??? 12"<<"\n";
         });
 
     world.system<Position>()
@@ -432,6 +445,7 @@ int main(int argc, char* argv[]) {
             pos.y += 1;
         } // Else Event 5: Stay still
         e.remove<BulkTag>(); // We no longer know whether the entity is on lower right corner
+        //std::cout<<"Segmentation Fault??? 13"<<"\n";
         });
     
     // write initial data to file
