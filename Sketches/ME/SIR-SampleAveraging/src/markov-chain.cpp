@@ -58,7 +58,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
 
     // Initialise flecs world
     flecs::world world(argc,argv);
-    world.set_threads(1); 
+    //world.set_threads(1); 
 
     // Creating components
     world.component<State>();
@@ -91,7 +91,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
 
     // Update Entity Transition Probabilities
     world.system<State, MarkovProbabilities>()
-        .multi_threaded()
+        //.multi_threaded()
         .each([&](State& state, MarkovProbabilities&prob){
             if (state.s == 1){
                 prob.q1 = Q11;
@@ -110,7 +110,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
     
     // Update State
     world.system<State, MarkovProbabilities>()
-        .multi_threaded()
+        //.multi_threaded()
         .each([&](State& state, MarkovProbabilities&prob){
             double rand = dist(rng);
             if(rand < prob.q1){
@@ -145,6 +145,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
                 state.s = 3;
             }
         });
+
     while (t+timeStep<maxTime) {
         std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
         world.progress();

@@ -1,0 +1,2 @@
+external_figures/figureMaking-figure10.pdf: person1.txt
+external_figures/figureMaking-figure10.pdf: person2.txt

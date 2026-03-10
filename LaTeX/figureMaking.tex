@@ -8,6 +8,8 @@
 \usetikzlibrary{decorations.markings}
 \usepackage{pgfplots}
 \usepgfplotslibrary{fillbetween}
+\usepgfplotslibrary{external} 
+\tikzexternalize[prefix=external_figures/]
 \pgfplotsset{compat=newest}
 \definecolor{matplotlibBlue}{RGB}{31, 119, 191}  
 \definecolor{matplotlibOrange}{RGB}{255, 127, 14}  
@@ -247,7 +249,7 @@
 
 \begin{figure}
 \begin{center}
-\pgfplotslegendfromname{namedLegendMacroscopicSIREnsemble}
+\pgfplotslegendfromname{namedLegendSIREnsemble}
 \end{center}
 \begin{subfigure}{.5\linewidth}
     \centering
@@ -301,7 +303,7 @@
     \begin{axis}[
         legend columns=3,
         legend entries={Susceptible,Infected,Recovered},
-        legend to name=namedLegendMacroscopicSIREnsemble,
+        legend to name=namedLegendSIREnsemble,
         enlarge x limits=false,
         xlabel = $t$ (days),
         ylabel near ticks,
@@ -345,7 +347,7 @@
     \end{tikzpicture}
 \end{subfigure}
 \caption{Ensemble averaged SIR model with $\beta/N$ people infected per day per infected person per susceptible person and $\gamma=1$ people recovered per day per infected person, where $N=100$ is the total population. $I_0$ people are infected at $t=0$ and the rest of the population is susceptible. (a): $\beta=7$, $I_0=1$; (b): $\beta=7$, $I_0=10$. Figures produced by M. G. Hauge Evans.}
-\label{fig:macroscopicSIREnsemble}
+\label{fig:SIREnsemble}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}
@@ -375,5 +377,108 @@
 \end{tikzpicture}
 \caption{Random Walk Plot. Figures produced by M. G. Hauge Evans.}
 \label{fig:randomWalkPlot}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+\begin{center}
+\pgfplotslegendfromname{namedLegendSIREnsembleRandomWalk}
+\end{center}
+\begin{subfigure}{.5\linewidth}
+    \centering
+    \begin{tikzpicture}
+    \node at (2,5.3) {(a) $\beta=7,I_0=1$};
+    \begin{axis}[
+        enlarge x limits=false,
+        xlabel = $t$ (days),
+        ylabel = No. People,
+        ylabel near ticks,
+        ]   
+        \addplot [color=matplotlibBlue,mark=none,line width=1pt]
+        table[x=time,y=state1Mean,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot [name path=susceptible_top,color=matplotlibBlue,mark=none,line width=0pt]
+        table[x=time,y=state1upper,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot [name path=susceptible_bottom,color=matplotlibBlue,mark=none,line width=0pt]
+        table[x=time,y=state1lower,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot[matplotlibBlue!50,fill opacity=0.5] fill between[of=susceptible_top and susceptible_bottom];
+
+	\addplot [color=matplotlibOrange,mark=none,line width=1pt]
+        table[x=time,y=state2Mean,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot [name path=infected_top,color=matplotlibOrange,mark=none,line width=0pt]
+        table[x=time,y=state2upper,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot [name path=infected_bottom,color=matplotlibOrange,mark=none,line width=0pt]
+        table[x=time,y=state2lower,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot[matplotlibOrange!50,fill opacity=0.5] fill between[of=infected_top and infected_bottom];
+
+	\addplot [color=matplotlibGreen,mark=none,line width=1pt]
+        table[x=time,y=state3Mean,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+        \addplot [name path=recovered_top,color=matplotlibGreen,mark=none,line width=0pt]
+        table[x=time,y=state3upper,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+        \addplot [name path=recovered_bottom,color=matplotlibGreen,mark=none,line width=0pt]
+        table[x=time,y=state3lower,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+        \addplot[matplotlibGreen!50,fill opacity=0.5] fill between[of=recovered_top and recovered_bottom];
+    \end{axis}
+    \end{tikzpicture}
+\end{subfigure}
+\begin{subfigure}{.5\linewidth}
+    \centering
+    \begin{tikzpicture}
+    \node at (2,5.3) {(b) $\beta=7,I_0=10$};
+    \begin{axis}[
+        legend columns=3,
+        legend entries={Susceptible,Infected,Recovered},
+        legend to name=namedLegendSIREnsembleRandomWalk,
+        enlarge x limits=false,
+        xlabel = $t$ (days),
+        ylabel near ticks,
+       ]
+        \addplot [color=matplotlibBlue,mark=none,line width=1pt]
+        table[x=time,y=state1Mean,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot [color=matplotlibOrange,mark=none,line width=1pt]
+        table[x=time,y=state2Mean,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot [color=matplotlibGreen,mark=none,line width=1pt]
+        table[x=time,y=state3Mean,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+
+        \addplot [name path=susceptible_top,color=matplotlibBlue,mark=none,line width=0pt]
+        table[x=time,y=state1upper,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot [name path=susceptible_bottom,color=matplotlibBlue,mark=none,line width=0pt]
+        table[x=time,y=state1lower,col sep=comma]
+        {SIRrandomWalkSusceptibleBeta10I1.txt};
+        \addplot[matplotlibBlue!50,fill opacity=0.5] fill between[of=susceptible_top and susceptible_bottom];
+
+	
+        \addplot [name path=infected_top,color=matplotlibOrange,mark=none,line width=0pt]
+        table[x=time,y=state2upper,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot [name path=infected_bottom,color=matplotlibOrange,mark=none,line width=0pt]
+        table[x=time,y=state2lower,col sep=comma]
+        {SIRrandomWalkInfectedBeta10I1.txt};
+        \addplot[matplotlibOrange!50,fill opacity=0.5] fill between[of=infected_top and infected_bottom];
+
+	
+        \addplot [name path=recovered_top,color=matplotlibGreen,mark=none,line width=0pt]
+        table[x=time,y=state3upper,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+        \addplot [name path=recovered_bottom,color=matplotlibGreen,mark=none,line width=0pt]
+        table[x=time,y=state3lower,col sep=comma]
+        {SIRrandomWalkRecoveredBeta10I1.txt};
+        \addplot[matplotlibGreen!50,fill opacity=0.5] fill between[of=recovered_top and recovered_bottom];
+    \end{axis}
+    \end{tikzpicture}
+\end{subfigure}
+\caption{Ensemble averaged random walk SIR model with $\beta/N$ people infected per day per infected person per susceptible person and $\gamma=1$ people recovered per day per infected person, where $N=100$ is the total population. $I_0$ people are infected at $t=0$ and the rest of the population is susceptible. (a): $\beta=7$, $I_0=1$; (b): $\beta=7$, $I_0=10$. Figures produced by M. G. Hauge Evans.}
+\label{fig:SIREnsembleRandomWalk}
 \end{figure}
 \end{document}

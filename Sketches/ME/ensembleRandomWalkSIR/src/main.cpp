@@ -57,7 +57,11 @@ struct Position { int x, y; }; // position struct
 // These tags tell you the state of the entity
 struct InfectedTag {}; // Important for infection matrix
 struct State { int s; }; // Entity infection state
+<<<<<<< HEAD
 struct MarkovProbabilities { double q1, q2, q3; }; // Marko Chain Probabilities. q1 sends you to S, q2 to I, and q3 to R
+=======
+struct MarkovProbabilities { double q1, q2, q3; }; // Markov Chain Probabilities. q1 sends you to S, q2 to I, and q3 to R
+>>>>>>> 761e1010 (more ensemble averaging)
 
 // These Tags tell you the type of tile the entity is on
 struct BulkTag {};
@@ -450,7 +454,10 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
         }
     }
     while (t<maxTime) {
+<<<<<<< HEAD
         std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
+=======
+>>>>>>> 761e1010 (more ensemble averaging)
         world.progress();
         t += timeStep;
         // update sample variables
@@ -523,6 +530,10 @@ int main(int argc, char* argv[]) {
                 individualPopulation2[i] << "," << individualPopulation3[i] << std::endl; 
             }
         }
+<<<<<<< HEAD
+=======
+        std::cout<<"Sample = "<< sampleCounter <<std::endl;
+>>>>>>> 761e1010 (more ensemble averaging)
         MyFileSample.close();
         sampleCounter += 1; // increase sample counter
         populationSamples1.push_back(individualPopulation1); // record susceptible population vector
