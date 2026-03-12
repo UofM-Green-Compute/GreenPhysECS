@@ -147,7 +147,6 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
         });
 
     while (t+timeStep<maxTime) {
-        std::cout<<"t = "<<t<<" days. Sample = "<< sampleCounter <<std::endl;
         world.progress();
         t += timeStep;
         timeArray.push_back(t);
@@ -216,6 +215,7 @@ int main(int argc, char* argv[]) {
     clock_t tClock;
     tClock = clock();  
     while (sampleCounter <= sampleNumber){
+        std::cout<<"Sample = "<< sampleCounter <<std::endl;
         runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
             individualTimes);
         // Record the first sample as an individual case

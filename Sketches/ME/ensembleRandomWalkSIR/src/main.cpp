@@ -513,6 +513,7 @@ int main(int argc, char* argv[]) {
     clock_t tClock;
     tClock = clock();  
     while (sampleCounter <= sampleNumber){
+        std::cout<<"Sample = "<< sampleCounter <<std::endl;
         runModel(argc,argv, individualPopulation1, individualPopulation2, individualPopulation3, 
             individualTimes);
         // Record the first sample as an individual case
@@ -522,7 +523,6 @@ int main(int argc, char* argv[]) {
                 individualPopulation2[i] << "," << individualPopulation3[i] << std::endl; 
             }
         }
-        std::cout<<"Sample = "<< sampleCounter <<std::endl;
         MyFileSample.close();
         sampleCounter += 1; // increase sample counter
         populationSamples1.push_back(individualPopulation1); // record susceptible population vector
