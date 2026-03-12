@@ -10,8 +10,8 @@ std::uniform_real_distribution<double> dist(0,1);
 
 struct State { int s; };
 
-void transition(flecs::world world, flecs::entity &e, 
-    int &functionState, std::vector<double> &probabilities, std::vector<int> &populationSizes) {
+void transition(flecs::entity &e, int &functionState, std::vector<double> &probabilities, 
+    std::vector<int> &populationSizes) {
     /*
     This decides which new state the entity should transition to. This depends only on its
     probability vector: probabilities[i] is the probabilities of transition to state s = i
@@ -20,9 +20,8 @@ void transition(flecs::world world, flecs::entity &e,
     population state
     */ 
     double rand = dist(rng); 
-    double probability_sum = 0; 
-    bool transition = false; 
-    for(int i = 1; i <= probabilities.size(); i++){
+    double probability_sum = 0;
+    for(int i = 1; i <= (int) probabilities.size(); i++){
         if (functionState != i) { 
             probability_sum += probabilities[i-1]; 
             if ( (rand < probability_sum) ){
