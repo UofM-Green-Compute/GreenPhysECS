@@ -1,21 +1,36 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt 
+import networkx as nx
 
 root_folder = os.path.dirname(os.path.dirname(__file__))
-data_path_SEIR = os.path.join(root_folder, "outputs", "SEIR.txt")
+data_path_SEIR = os.path.join(root_folder, "outputs", "Network-SIR.txt")
+data_path_Edges = os.path.join(root_folder, "outputs", "Network-Edges.txt")
 
-SEIR_count = np.genfromtxt(data_path_SEIR, delimiter = ',', skip_header = 1)
+SIR_data = np.genfromtxt(data_path_SEIR, delimiter = ',', skip_header = 0)
+Edges_data = open(data_path_Edges)
 
-figSEIR, axSEIR = plt.subplots()
-axSEIR.plot(SEIR_count[:,0],SEIR_count[:,1],label='Susceptible')
-axSEIR.plot(SEIR_count[:,0],SEIR_count[:,2],label='Exposed')
-axSEIR.plot(SEIR_count[:,0],SEIR_count[:,3],label='Infected')
-axSEIR.plot(SEIR_count[:,0],SEIR_count[:,4],label='Recovered')
-axSEIR.set_xlabel("Time (t)")
-axSEIR.set_ylabel("No. People")
-figSEIR.legend(loc='upper center', ncol=4) 
+data = []
+for i,row in enumerate(Edges_data):
+    data.append([])
+    row = row.split(";")
+    for j,line in enumerate(row): 
+        if(line != '\n' and j!= 0): 
+            line = line.split(",")
+            data[i].append(tuple(int(x) for x in line))
 
-figSEIR.savefig("SEIR")
+G = nx.Graph()
+G.add_edges_from(data[1])
+nx.draw_spring(G)
+
+figSIR, axSIR = plt.subplots()
+axSIR.plot(SIR_data[:,0],SIR_data[:,1],label='Susceptible')
+axSIR.plot(SIR_data[:,0],SIR_data[:,2],label='Infected')
+axSIR.plot(SIR_data[:,0],SIR_data[:,3],label='Recovered')
+axSIR.set_xlabel("Time")
+axSIR.set_ylabel("No. People")
+figSIR.legend(loc='upper center', ncol=4) 
+
+figSIR.savefig("Network-SIR")
 
 plt.show()
