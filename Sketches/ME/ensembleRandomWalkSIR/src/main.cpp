@@ -463,7 +463,7 @@ void runModel(int argc, char* argv[], std::vector<int> &population1,
                 infectionMatrix[i][j] = {0};
             }
         }
-        }
+    }
 }
 
 double findMean(std::vector<int> intArray) {
