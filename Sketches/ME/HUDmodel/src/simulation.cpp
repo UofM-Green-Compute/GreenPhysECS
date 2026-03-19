@@ -5,22 +5,24 @@
 #include "markovSystems.h"
 
 // Initialise State components (Note that the sum of qnm for each component must equal 1)
-struct PeopleIndex { int p; }; 
-struct State { int s; }; // Track current state of entity
-struct TransitionProbabilities { std::vector<double> qnm; }; // Transition from state m to state n = 1,2
+struct Index { int plantNumber; }; // what is your index within your vector
+struct MarkovState { int s; }; // Track current markov state of entity
+struct PlantState { int type; }; // 0: crop. 1: sentinel
+struct TransitionProbabilities { std::vector<double> qnm; }; // Transition from state m to state n = 1,2, 3
 
 // Tools for picking random numbers 
 std::mt19937 rng( std::random_device{}()  ) ; 
 std::uniform_real_distribution<double> dist(0,1); 
 
 void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalPopulation, 
-    int initialInfected){
+    int initialInfected, int plantType){
     for (int i = 0; i < totalPopulation-initialInfected; ++i) { 
         std::vector<double> Qnm = {0, 0}; 
         p.push_back( 
             world.entity() 
-                .set<PeopleIndex>({i})
-                .set<State>({1})
+                .set<Index>({i})
+                .set<MarkovState>({1})
+                .set<PlantState> ({plantType})
                 .set<TransitionProbabilities>({Qnm})
         ); 
     } 
@@ -28,28 +30,30 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalP
         std::vector<double> Qnm = {0, 0}; 
         p.push_back( 
             world.entity() 
-                .set<PeopleIndex>({totalPopulation-initialInfected + i})
-                .set<State>({2})
+                .set<Index>({totalPopulation-initialInfected + i})
+                .set<MarkovState>({2})
+                .set<PlantState> ({plantType})
                 .set<TransitionProbabilities>({Qnm})
         ); 
     }
 }
 
 void setupComponents(flecs::world world){
-    world.component<PeopleIndex>(); 
-    world.component<State>(); 
+    world.component<Index>();
+    world.component<MarkovState>();
+    world.component<PlantState>();
     world.component<TransitionProbabilities>();
 }
 
-void setupSystems(flecs::world world, std::vector<int> &population, const double infectionRate,
-    const double recoveryRate, const double step) {
-    updateProbabilities(world, population, infectionRate, recoveryRate, step);
-    transition(world, population);
+void setupSystems(flecs::world world, std::vector<int> &cropPopulation, std::vector<int> &sentinelPopulation,
+    std::vector<double> infectionRates, std::vector<double> scalings, std::vector<double> presymptomaticTimes) {
+    updateProbabilities(world, cropPopulation, sentinelPopulation, infectionRates, scalings, presymptomaticTimes);
+    transition(world, cropPopulation, sentinelPopulation);
 }
 
-int simulate(int argc, char* argv[], const double infectionRate, const double recoveryRate, 
-const int totalPopulation, const int initialInfected, const double step, const double totalTime, 
-std::string filename) {
+int simulate(int argc, char* argv[], std::vector<double> betas, std::vector<double> epsilons, 
+    std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
+    const int maxTime, std::string filename1, std::string filename2) {
     /*
     This function
     1) Initializes a population vector
@@ -60,34 +64,47 @@ std::string filename) {
     */
 
     // Population vector will be updated and saved over time
-    std::vector<int> population_vector = {totalPopulation-initialInfected, initialInfected, 0};
-
+    std::vector<int> cropsPopulationVector = {totalPopulations[0]-U0[0], U0[0], 0};
+    std::vector<int> sentinelsPopulationVector = {totalPopulations[1]-U0[1], U0[1], 0};
     // Initialise flecs world
     flecs::world world(argc,argv);
 
     // Creating components
     setupComponents(world);
 
-    // Create a people vector and generate entities
-    std::vector<flecs::entity> people; 
-    people.reserve(totalPopulation); 
-    setupEntities(world, people, totalPopulation, initialInfected); 
+    // Create a crop and sentinels vector and generate entities
+    std::vector<flecs::entity> crops;
+    std::vector<flecs::entity> sentinels; 
+    crops.reserve(totalPopulations[0]);
+    sentinels.reserve(totalPopulations[1]);
+    setupEntities(world, crops, totalPopulations[0], totalPopulations[0], 0);
+    setupEntities(world, sentinels, totalPopulations[1], totalPopulations[1], 1); 
 
     // Create the systems
-    setupSystems(world, population_vector, infectionRate, recoveryRate, step);
+    setupSystems(world, cropsPopulationVector, sentinelsPopulationVector, betas, epsilons, gammas);
 
     // Run the simulation
-    std::ofstream MyFile;
-    MyFile.open(filename);
-    MyFile << "Time,Susceptible,Infected" << std::endl; 
+    std::ofstream MyFile1; // crops
+    std::ofstream MyFile2; // sentinels
+    MyFile1.open(filename1);
+    MyFile2.open(filename2);
+    MyFile1 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
+    MyFile2 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
     double time = 0;
-    MyFile << time << "," << population_vector[0] << "," << population_vector[1] << std::endl;  
-    while (time<totalTime) {
+    MyFile1 << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
+            << cropsPopulationVector[2] << std::endl;  
+    MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
+            << sentinelsPopulationVector[2] << std::endl;  
+    while (time<maxTime) {
         world.progress();
-        time += step;
+        time += 1;
         // update sample variables
-        MyFile << time << "," << population_vector[0] << "," << population_vector[1] << std::endl;  
+        MyFile1 << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
+            << cropsPopulationVector[2] << std::endl;  
+        MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
+                << sentinelsPopulationVector[2] << std::endl;  
     }
-    MyFile.close();
+    MyFile1.close();
+    MyFile2.close();
     return 0;
 }

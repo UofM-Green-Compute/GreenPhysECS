@@ -4,15 +4,22 @@
 #include <time.h> 
 #include <fstream>
 #include <sstream>
+#include <cmath>
 #include "simulation.h"
 
+// Parameters
+int MAX_TIME = 10000; // Maximum Simulation Time
+
+// Vectors of form {crops, sentinels}
+std::vector<double> BETAS = {5*pow(10,-5),5*pow(10, -5)}; // daily per capita infection rate
+std::vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
+std::vector<double> GAMMAS = {452, 49};
+
 // Initial Conditions
-int NO_PEOPLE = 100; // Total number of people
-int I0 = 3; // Number of initially infected peoples
-double timeStep = 0.005; // Set timestep = 0.0001
-double maxTime = 8; // Maximum Simulation Time
-double beta = 3 / static_cast<double>(NO_PEOPLE); // infection rate
-double alpha = 1; // recovery rate
+std::vector<int> TOTAL_NUMBER = {100, 100}; // total number of plants
+std::vector<int> SICK_PLANTS = {3, 0}; //total number of sick plants
+
+// Sample Parameters
 int sampleCounter1 = 1; // Set sample counter = 1
 int sampleCounter2 = 1; // Set sample counter = 1
 int sampleNumber = 100; // total number of samples
@@ -30,14 +37,14 @@ int main(int argc, char* argv[]) {
     tClock = clock(); 
 
     // Loop over samples
-    std::vector<std::string> fileNames; 
     while (sampleCounter1 <= sampleNumber){
-        char filename[50]; 
-        sprintf(filename, "SIS_%d.txt", sampleCounter1); // Create filename
-        fileNames.push_back(filename); // Update filenames vector 
-        std::cout<<"Sample = "<< sampleCounter1 <<std::endl; // Print simulation number
-        simulate(argc, argv, beta, alpha, NO_PEOPLE, I0, timeStep, maxTime, filename); // Run Simulation
-        sampleCounter1 += 1; // increase sample counter
+        char FILENAME1[50]; 
+        char FILENAME2[50]; 
+        sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter1);
+        sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter1);
+        std::cout<<"Sample = "<< sampleCounter1 <<std::endl;
+        simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, FILENAME1, FILENAME2);
+        sampleCounter1 += 1;
     }
     // Record How long the simulation took
     tClock = clock() - tClock; 
