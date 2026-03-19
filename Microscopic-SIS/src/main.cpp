@@ -8,7 +8,7 @@
 
 // Initial Conditions
 int NO_PEOPLE = 100; // Total number of people
-int I0 = 10; // Number of initially infected peoples
+int I0 = 3; // Number of initially infected peoples
 double timeStep = 0.005; // Set timestep = 0.0001
 double maxTime = 8; // Maximum Simulation Time
 double beta = 3 / static_cast<double>(NO_PEOPLE); // infection rate

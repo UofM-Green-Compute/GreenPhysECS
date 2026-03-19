@@ -35,6 +35,11 @@ ax.plot(time,upperInfected, color = 'tab:orange', alpha = 0.5)
 ax.plot(time,lowerInfected, color = 'tab:orange', alpha = 0.5)
 ax.fill_between(time, infectedMean, upperInfected, color = 'tab:orange', alpha = 0.1)
 ax.fill_between(time, infectedMean, lowerInfected, color = 'tab:orange', alpha = 0.1)
+#axis labels and limits
+ax.set_xlabel("time (days)")
+ax.set_ylabel("population (no. people)")
+ax.set_ylim(0, 100)
+ax.set_xlim(0,8)
 #legend
 fig.legend(loc='upper center', ncol=3)
 fig.savefig(savePathSIS)
