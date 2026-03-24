@@ -78,7 +78,6 @@ void transition(flecs::world &world, std::vector<int> &cropsPopulation, std::vec
             for(int i = 1; i <= (int) p_vector.qnm.size(); i++){
                 probability_sum += p_vector.qnm[i-1];
                 if ((rand < probability_sum)){
-                    
                     if (plantState.type == 0) {
                         cropsPopulation[markovState.s-1] -= 1;
                         cropsPopulation[i-1] += 1; 

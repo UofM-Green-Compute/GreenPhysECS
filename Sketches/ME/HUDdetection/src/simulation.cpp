@@ -3,6 +3,7 @@
 #include <fstream>
 #include <random>
 #include <algorithm>
+#include <filesystem>
 #include "markovSystems.h"
 
 // if this bool is set to true then simulation will stop
@@ -83,8 +84,8 @@ void detect(std::vector<flecs::entity> plants, std::vector<int> &detectionIndice
 
 int simulate(int argc, char* argv[], const std::vector<double> betas, std::vector<double> epsilons, 
     std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
-    const int delta, const std::vector<int> sampleSizes, const int maxTime, std::string filename1, 
-    std::string filename2) {
+    const int delta, const std::vector<int> sampleSizes, const int maxTime, std::filesystem::path filePath1,
+    std::filesystem::path filePath2) {
     /*
     This function
     1) Initializes a population vector
@@ -126,10 +127,8 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
     setupSystems(world, cropsPopulationVector, sentinelsPopulationVector, betas, epsilons, gammas);
 
     // Run the simulation
-    std::ofstream MyFile1; // crops
-    std::ofstream MyFile2; // sentinels
-    MyFile1.open(filename1);
-    MyFile2.open(filename2);
+    std::ofstream MyFile1(filePath1); // crops
+    std::ofstream MyFile2(filePath2); // sentinels
     MyFile1 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
     MyFile2 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
     MyFile1 << 0 << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
@@ -147,7 +146,6 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
                 << sentinelsPopulationVector[2] << std::endl;
 
         // detection
-        std::cout<<time<<"\n";
         selectIndices(cropShuffledIndices, cropDetectionIndices, sampleSizes[0]);
         selectIndices(sentinelShuffledIndices, sentinelDetectionIndices, sampleSizes[1]);
         if (time%delta == 0){
@@ -157,7 +155,6 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
             }
         }
         if (outbreakDetection == true) {
-            std::cout<<"ahghhgh theres an outbreak!"<<"\n";
             break;
         } 
     }
