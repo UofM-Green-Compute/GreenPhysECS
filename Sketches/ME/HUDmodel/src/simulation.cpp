@@ -17,7 +17,7 @@ std::uniform_real_distribution<double> dist(0,1);
 void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalPopulation, 
     int initialInfected, int plantType){
     for (int i = 0; i < totalPopulation-initialInfected; ++i) { 
-        std::vector<double> Qnm = {0, 0}; 
+        std::vector<double> Qnm = {0, 0, 0}; 
         p.push_back( 
             world.entity() 
                 .set<Index>({i})
@@ -27,14 +27,14 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalP
         ); 
     } 
     for (int i = 0; i < initialInfected; ++i) { 
-        std::vector<double> Qnm = {0, 0}; 
+        std::vector<double> Qnm = {0, 0, 0}; 
         p.push_back( 
             world.entity() 
                 .set<Index>({totalPopulation-initialInfected + i})
                 .set<MarkovState>({2})
                 .set<PlantState> ({plantType})
                 .set<TransitionProbabilities>({Qnm})
-        ); 
+        );
     }
 }
 
@@ -45,13 +45,13 @@ void setupComponents(flecs::world world){
     world.component<TransitionProbabilities>();
 }
 
-void setupSystems(flecs::world world, std::vector<int> &cropPopulation, std::vector<int> &sentinelPopulation,
-    std::vector<double> infectionRates, std::vector<double> scalings, std::vector<double> presymptomaticTimes) {
+void setupSystems(flecs::world &world, std::vector<int> &cropPopulation, std::vector<int> &sentinelPopulation,
+    const std::vector<double> &infectionRates, std::vector<double> &scalings, std::vector<double> &presymptomaticTimes) {
     updateProbabilities(world, cropPopulation, sentinelPopulation, infectionRates, scalings, presymptomaticTimes);
     transition(world, cropPopulation, sentinelPopulation);
 }
 
-int simulate(int argc, char* argv[], std::vector<double> betas, std::vector<double> epsilons, 
+int simulate(int argc, char* argv[], const std::vector<double> betas, std::vector<double> epsilons, 
     std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
     const int maxTime, std::string filename1, std::string filename2) {
     /*
@@ -77,9 +77,8 @@ int simulate(int argc, char* argv[], std::vector<double> betas, std::vector<doub
     std::vector<flecs::entity> sentinels; 
     crops.reserve(totalPopulations[0]);
     sentinels.reserve(totalPopulations[1]);
-    setupEntities(world, crops, totalPopulations[0], totalPopulations[0], 0);
-    setupEntities(world, sentinels, totalPopulations[1], totalPopulations[1], 1); 
-
+    setupEntities(world, crops, totalPopulations[0], U0[0], 0);
+    setupEntities(world, sentinels, totalPopulations[1], U0[1], 1); 
     // Create the systems
     setupSystems(world, cropsPopulationVector, sentinelsPopulationVector, betas, epsilons, gammas);
 

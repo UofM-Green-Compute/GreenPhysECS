@@ -8,7 +8,7 @@
 #include "simulation.h"
 
 // Parameters
-int MAX_TIME = 10000; // Maximum Simulation Time
+int MAX_TIME = 3000; // Maximum Simulation Time
 
 // Vectors of form {crops, sentinels}
 std::vector<double> BETAS = {5*pow(10,-5),5*pow(10, -5)}; // daily per capita infection rate
