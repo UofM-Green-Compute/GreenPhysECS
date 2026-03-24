@@ -19,6 +19,10 @@ std::vector<double> GAMMAS = {452, 49};
 std::vector<int> TOTAL_NUMBER = {100, 100}; // total number of plants
 std::vector<int> SICK_PLANTS = {3, 0}; //total number of sick plants
 
+// Detection Parameters
+int DELTA = 30;
+std::vector<int> SAMPLE_SIZES = {25, 0};
+
 // Sample Parameters
 int sampleCounter1 = 1; // Set sample counter = 1
 int sampleCounter2 = 1; // Set sample counter = 1
@@ -43,7 +47,8 @@ int main(int argc, char* argv[]) {
         sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter1);
         sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter1);
         std::cout<<"Sample = "<< sampleCounter1 <<std::endl;
-        simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, FILENAME1, FILENAME2);
+        simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, DELTA, SAMPLE_SIZES, MAX_TIME, 
+                FILENAME1, FILENAME2);
         sampleCounter1 += 1;
     }
     // Record How long the simulation took

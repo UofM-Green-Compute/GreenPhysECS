@@ -2,7 +2,11 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <algorithm>
 #include "markovSystems.h"
+
+// if this bool is set to true then simulation will stop
+
 
 // Initialise State components (Note that the sum of qnm for each component must equal 1)
 struct Index { int plantNumber; }; // what is your index within your vector
@@ -11,7 +15,7 @@ struct PlantState { int type; }; // 0: crop. 1: sentinel
 struct TransitionProbabilities { std::vector<double> qnm; }; // Transition from state m to state n = 1,2, 3
 
 // Tools for picking random numbers 
-std::mt19937 rng( std::random_device{}()  ) ; 
+std::mt19937 rng(std::random_device{}()) ; 
 std::uniform_real_distribution<double> dist(0,1); 
 
 void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalPopulation, 
@@ -51,9 +55,36 @@ void setupSystems(flecs::world &world, std::vector<int> &cropPopulation, std::ve
     transition(world, cropPopulation, sentinelPopulation);
 }
 
+void selectIndices(std::vector<int> &shuffledIndices, std::vector<int> &detectionIndices, int sampleSize) {
+    /*
+    This function shuffles shuffledIndices, and populates detectionIndices with first sampleSize indices
+    */
+    auto rngShuffle = std::default_random_engine {};
+    std::shuffle(std::begin(shuffledIndices), std::end(shuffledIndices), rngShuffle);
+    for(unsigned int i = 0; i < (unsigned) sampleSize; i++) {
+        detectionIndices.push_back(shuffledIndices[i]);
+    }
+}
+
+void detect(std::vector<flecs::entity> plants, std::vector<int> &detectionIndices, bool &outbreakDetection) {
+    /*
+    This functions loops through the detection indices to check if a plant in the sample is 
+    infected
+    */
+    //std::cout<<"bonjour\n";
+    for (int index : detectionIndices) {
+        const MarkovState &state = plants[index].get<MarkovState>();
+        if (state.s == 3) {// if the plant is detectable 
+            outbreakDetection = true;
+            break;           
+        }
+    }
+}
+
 int simulate(int argc, char* argv[], const std::vector<double> betas, std::vector<double> epsilons, 
     std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
-    const int maxTime, std::string filename1, std::string filename2) {
+    const int delta, const std::vector<int> sampleSizes, const int maxTime, std::string filename1, 
+    std::string filename2) {
     /*
     This function
     1) Initializes a population vector
@@ -62,6 +93,18 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
     4) Runs the simulation
     5) Saves the data to a data file every time step
     */
+    bool outbreakDetection = false;
+    std::vector<int> cropShuffledIndices; // This vector contains indices of crops which will be checked
+    std::vector<int> sentinelShuffledIndices; // This vector contains indices of crops which will be checked
+    std::vector<int> cropDetectionIndices; // This vector contains indices of crops which will be checked
+    std::vector<int> sentinelDetectionIndices; // This vector contains indices of crops which will be checked
+    // fill the shuffled indices vector with unshuffled indices (they will be shuffled later)
+    for (int integer = 0; integer < totalPopulations[0]; integer++) {
+        cropShuffledIndices.push_back(integer);
+    }
+    for (int integer = 0; integer < totalPopulations[1]; integer++) {
+        sentinelShuffledIndices.push_back(integer);
+    }
 
     // Population vector will be updated and saved over time
     std::vector<int> cropsPopulationVector = {totalPopulations[0]-U0[0], U0[0], 0};
@@ -89,19 +132,34 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
     MyFile2.open(filename2);
     MyFile1 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
     MyFile2 << "Time,Healthy,Undetectable,Detectable" << std::endl; 
-    double time = 0;
-    MyFile1 << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
+    MyFile1 << 0 << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
             << cropsPopulationVector[2] << std::endl;  
-    MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
-            << sentinelsPopulationVector[2] << std::endl;  
-    while (time<maxTime) {
+    MyFile2 << 0 << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
+            << sentinelsPopulationVector[2] << std::endl;
+    for (int time = 1;time<=maxTime;time++) {
+        // infection spread
         world.progress();
-        time += 1;
-        // update sample variables
+
+        // save infection to data to file
         MyFile1 << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
             << cropsPopulationVector[2] << std::endl;  
         MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
-                << sentinelsPopulationVector[2] << std::endl;  
+                << sentinelsPopulationVector[2] << std::endl;
+
+        // detection
+        std::cout<<time<<"\n";
+        selectIndices(cropShuffledIndices, cropDetectionIndices, sampleSizes[0]);
+        selectIndices(sentinelShuffledIndices, sentinelDetectionIndices, sampleSizes[1]);
+        if (time%delta == 0){
+            detect(sentinels, sentinelDetectionIndices, outbreakDetection);
+            if (outbreakDetection == false){
+                detect(crops, cropDetectionIndices, outbreakDetection);
+            }
+        }
+        if (outbreakDetection == true) {
+            std::cout<<"ahghhgh theres an outbreak!"<<"\n";
+            break;
+        } 
     }
     MyFile1.close();
     MyFile2.close();
