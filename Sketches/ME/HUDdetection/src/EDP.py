@@ -6,7 +6,7 @@ import os
 Pcrops = 1000
 Psentinels = 50
 N = 25
-Delta = 10
+Delta = 30
 totalPopulation = Pcrops+Psentinels
 numberOfSamples = 100
 
@@ -44,22 +44,15 @@ for Nsentinel in range(N+1):
 
     NsentinelArray[Nsentinel] = Nsentinel
 
-    EDP_meanArray[Nsentinel] = np.mean(EDParray)
-    EDP_stdArray[Nsentinel] = np.std(EDParray)
+    EDP_meanArray[Nsentinel] = 100*np.mean(EDParray)
+    EDP_stdArray[Nsentinel] = 100*np.std(EDParray)
 
-    EDT_meanArray[Nsentinel] = np.mean(EDParray)
-    EDT_stdArray[Nsentinel] = np.std(EDParray)
-
-saveData(outputPath, ['Nsentinel', 'EDP mean'], NsentinelArray, EDP_meanArray, 'EDPmean.txt')
-saveData(outputPath, ['Nsentinel', 'EDP STD'], NsentinelArray, EDP_stdArray, 'EDPstd.txt')
-saveData(outputPath, ['Nsentinel', 'EDP upper'], NsentinelArray, EDP_meanArray+EDP_stdArray, 
-         'EDPupper.txt')
-saveData(outputPath, ['Nsentinel', 'EDP lower'], NsentinelArray, EDP_meanArray-EDP_stdArray, 
-         'EDPlower.txt')
+    EDT_meanArray[Nsentinel] = 100*np.mean(EDTarray)
+    EDT_stdArray[Nsentinel] = 100*np.std(EDTarray)
 
 saveData(outputPath, ['Nsentinel', 'EDP mean'], NsentinelArray, EDP_meanArray, 'EDPmean.txt')
 saveData(outputPath, ['Nsentinel', 'EDP STD'], NsentinelArray, EDP_stdArray, 'EDPstd.txt')
-saveData(outputPath, ['Nsentinel', 'EDP upper'], NsentinelArray, EDP_meanArray+EDP_stdArray, 
-         'EDPupper.txt')
-saveData(outputPath, ['Nsentinel', 'EDP lower'], NsentinelArray, EDP_meanArray-EDP_stdArray, 
-         'EDPlower.txt')
+
+saveData(outputPath, ['Nsentinel', 'EDT mean'], NsentinelArray, EDT_meanArray, 'EDTmean.txt')
+saveData(outputPath, ['Nsentinel', 'EDT STD'], NsentinelArray, EDT_stdArray, 'EDTstd.txt')
+
