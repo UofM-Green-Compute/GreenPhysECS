@@ -25,9 +25,8 @@ int DELTA = 30;
 int SAMPLE_SIZE = 50;
 
 // Sample Parameters
-int sampleCounter1 = 1; // Set sample counter = 1
-int sampleCounter2 = 1; // Set sample counter = 1
-int sampleNumber = 1000; // total number of samples
+int sampleCounter = 1; // Set sample counter = 1
+int sampleNumber = 100; // total number of samples
 
 int main(int argc, char* argv[]) {
     /*
@@ -55,19 +54,19 @@ int main(int argc, char* argv[]) {
         std::filesystem::create_directory(setupPath);
         std::filesystem::path dir_path = setupPath / DIRECTORYNAMESURVEILLANCE;
         std::filesystem::create_directory(dir_path);
-        
+        sampleCounter = 0;
         // Loop over samples
-        while (sampleCounter1 <= sampleNumber){
+        while (sampleCounter <= sampleNumber){
             char FILENAME1[50]; 
             char FILENAME2[50]; 
-            sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter1);
-            sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter1);
+            sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter);
+            sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter);
             std::filesystem::path FILEPATH1 = dir_path / FILENAME1;
             std::filesystem::path FILEPATH2 = dir_path / FILENAME2;
-            std::cout<<"Sample = "<< sampleCounter1 << ", Iteration = " << iteration << std::endl;
+            std::cout<<"Sample = "<< sampleCounter << ", Iteration = " << iteration << std::endl;
             simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, DELTA, SAMPLE_SIZES, MAX_TIME, 
                     FILEPATH1, FILEPATH2);
-            sampleCounter1 += 1;
+            sampleCounter += 1;
         }
     }
        
