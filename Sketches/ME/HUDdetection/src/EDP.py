@@ -5,7 +5,7 @@ import os
 # preamble for directories and the like
 Pcrops = 1000
 Psentinels = 50
-N = 25
+N = 50
 Delta = 30
 totalPopulation = Pcrops+Psentinels
 numberOfSamples = 100
