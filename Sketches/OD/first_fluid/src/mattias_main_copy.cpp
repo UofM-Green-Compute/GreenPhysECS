@@ -1,7 +1,7 @@
 /*
 This code runs a simulation of a simple fluid which can be 
 solved analytically.
-*/
+*/ 
 
 #include <iostream>
 #include <vector>
@@ -22,7 +22,7 @@ double Gamma = (Rho * u * Nx) / Pe;
 double Start = 0;
 double End = 1;
 
-/*Create structs to be used as components for the matrix*/
+// Create structs to be used as components for the matrix 
 struct West { std::vector<double> a; };
 struct Diagonal { std::vector<double> b; };
 struct East { std::vector<double> c; };
@@ -187,3 +187,4 @@ int main(int argc, char* argv[]) {
     world.progress();
     MyFile.close();
 }
+

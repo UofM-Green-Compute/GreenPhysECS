@@ -4,3 +4,4 @@
 bin/*
 build/*
 .venv/*
+.DS_Store

@@ -31,5 +31,6 @@ axPhase.set_ylabel("Infected (I)")
 for l in range(10):
     axPhase.plot(data[l][:,1],data[l][:,2],color='C0')
 
+figSIS.savefig("SIS")
 figPhase.savefig("SIS_Phase_Portrait")
 plt.show()

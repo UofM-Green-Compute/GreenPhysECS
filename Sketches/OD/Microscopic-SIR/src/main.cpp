@@ -25,7 +25,7 @@ int noS = 0;         // Initialise the number of susceptible people
 int noI = 0;         // Initialise the number of infected people
 int noR = 0;         // Initialise the number of recovered people
 // Transition constants
-double beta = 1 / static_cast<double>(NO_PEOPLE); 
+double beta = 0.2 / static_cast<double>(NO_PEOPLE); 
 double alpha = 0.05; 
 // Constants for creating the phase portrait
 int NO_PHASE_RUNS = 10; 

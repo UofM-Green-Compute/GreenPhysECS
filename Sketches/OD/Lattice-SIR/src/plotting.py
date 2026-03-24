@@ -19,18 +19,19 @@ for i,row in enumerate(Edges_data):
             line = line.split(",")
             data[i].append(tuple(int(x) for x in line))
 
-G = nx.Graph()
-G.add_edges_from(data[1])
-nx.draw_spring(G)
-
 figSIR, axSIR = plt.subplots()
 axSIR.plot(SIR_data[:,0],SIR_data[:,1],label='Susceptible')
 axSIR.plot(SIR_data[:,0],SIR_data[:,2],label='Infected')
-axSIR.plot(SIR_data[:,0],SIR_data[:,3],label='Recovered')
 axSIR.set_xlabel("Time")
 axSIR.set_ylabel("No. People")
 figSIR.legend(loc='upper center', ncol=4) 
 
+figNetwork, axNetwork = plt.subplots()
+G = nx.Graph()
+G.add_edges_from(data[40])
+nx.draw_spring(G, node_size=30 ,ax=axNetwork)
+
 figSIR.savefig("Network-SIR")
+figNetwork.savefig("Network")
 
 plt.show()
