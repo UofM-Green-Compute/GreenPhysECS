@@ -8,7 +8,7 @@ Psentinels = 50
 N = 50
 Delta = 30
 totalPopulation = Pcrops+Psentinels
-numberOfSamples = 100
+numberOfSamples = 1000
 
 # access outputs folder
 outputPath = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 
