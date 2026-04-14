@@ -27,6 +27,8 @@ vector<int> SICK_PLANTS = {1, 0}; //total number of sick plants
 // Detection Parameters
 int DELTA = 30;
 int SAMPLE_SIZE = 50;
+vector<bool> DETECTION_CHECKER; // each index says if that strategy has detected the disease
+
 
 // Sample Parameters
 int sampleNumber = 1000; // total number of samples
@@ -65,6 +67,11 @@ int main(int argc, char* argv[]) {
     4) Stops and prints program clock
     */
 
+    // fills the detectionChecker vector with falses as no disease detected yet
+    for (int sentinelStrategy = 0; sentinelStrategy <= SAMPLE_SIZE; sentinelStrategy++){
+        DETECTION_CHECKER.push_back(false);
+    }
+
     // Start measuring run time of program
     clock_t tClock; 
     tClock = clock(); 
@@ -75,6 +82,16 @@ int main(int argc, char* argv[]) {
         TOTAL_NUMBER[0], TOTAL_NUMBER[1]);   
     filesystem::path setupPath = DIRECTORYNAMESETUP;
     filesystem::create_directory(setupPath);
+
+        // save EDP data
+    filesystem::path FilePathMean = setupPath / "EDPmean.txt";
+    filesystem::path FilePathSTD = setupPath / "EDPstd.txt";
+    ofstream MyFileMean(FilePathMean);
+    ofstream MyFileSTD(FilePathSTD);
+    MyFileMean << "Number of Sentinels, EDP Mean" << endl;
+    MyFileSTD << "Number of Sentinels, EDP STD" << endl;
+    vector<vector<double>> iterationPrevalence = {}; // store detection prevalence for each sample of this iteration
+
     // Loop over samples
     for (int sampleCounter = 1; sampleCounter <= sampleNumber; sampleCounter++){
         cout<<"Sample = "<<sampleCounter<<endl;
@@ -84,30 +101,11 @@ int main(int argc, char* argv[]) {
         sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter);
         filesystem::path FILEPATH1 = setupPath / FILENAME1;
         filesystem::path FILEPATH2 = setupPath / FILENAME2;
-        simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, 
-                FILEPATH1, FILEPATH2);
-    }
-
-    // save EDP data
-    filesystem::path FilePathMean = setupPath / "EDPmean.txt";
-    filesystem::path FilePathSTD = setupPath / "EDPstd.txt";
-    ofstream MyFileMean(FilePathMean);
-    ofstream MyFileSTD(FilePathSTD);
-    MyFileMean << "Number of Sentinels, EDP Mean" << endl;
-    MyFileSTD << "Number of Sentinels, EDP STD" << endl;
-    vector<vector<double>> iterationPrevalence = {}; // store detection prevalence for each sample of this iteration
-    for (int sampleCounter = 1; sampleCounter <= sampleNumber; sampleCounter++){
-        cout<<"Sample = "<<sampleCounter<<endl;
-        char FILENAME1[50]; 
-        char FILENAME2[50]; 
-        sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter);
-        sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter);
-        filesystem::path FILEPATH1 = setupPath / FILENAME1;
-        filesystem::path FILEPATH2 = setupPath / FILENAME2;
-        vector<double> sampleDetectionPrevalence = surveille(TOTAL_NUMBER, MAX_TIME, DELTA, FILEPATH1, FILEPATH2, 
-        SAMPLE_SIZE);
+        vector<double> sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
+            TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, DETECTION_CHECKER, SAMPLE_SIZE, DELTA, FILEPATH1, FILEPATH2);
         iterationPrevalence.push_back(sampleDetectionPrevalence);
     }
+
     for (int iteration = 0; iteration <= SAMPLE_SIZE; iteration++){
         double EDPmean = findMean(iterationPrevalence, iteration);
         double EDPstd = findSTD(iterationPrevalence, iteration, EDPmean);

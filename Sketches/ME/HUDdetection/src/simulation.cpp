@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 #include "markovSystems.h"
+#include "surveillance.h"
 
 using namespace std;
 
@@ -17,6 +18,10 @@ struct TransitionProbabilities { vector<double> qnm; }; // Transition from state
 // Tools for picking random numbers 
 mt19937 rng(random_device{}()) ; 
 uniform_real_distribution<double> dist(0,1); 
+
+// For each sampling strategy detection this goes up by one. If it equals the sampling size then
+// that means all strategies have detected the disease
+int detectionCounter = 0;
 
 void setupEntities(flecs::world world, vector<flecs::entity> &p, int totalPopulation, 
     int initialInfected, int plantType){
@@ -55,9 +60,10 @@ void setupSystems(flecs::world &world, vector<int> &cropPopulation, vector<int> 
     transition(world, cropPopulation, sentinelPopulation);
 }
 
-int simulate(int argc, char* argv[], const vector<double> betas, vector<double> epsilons, 
+vector<double> simulate(int argc, char* argv[], const vector<double> betas, vector<double> epsilons, 
     vector<double> gammas, vector<int> totalPopulations, vector<int> U0, 
-    const int maxTime, filesystem::path filePath1, filesystem::path filePath2) {
+    const int maxTime, vector<bool> detectionChecker, int sampleSize, int delta,
+    filesystem::path filePath1, filesystem::path filePath2) {
     /*
     This function
     1) Initializes a population vector
@@ -66,6 +72,12 @@ int simulate(int argc, char* argv[], const vector<double> betas, vector<double> 
     4) Runs the simulation
     5) Saves the data to a data file every time step
     */
+
+     // Fills the prevalence vector with zeroes so that it is the right size for indexing
+    vector<double> sampleDetectionPrevalence;
+    for (int detectionStrategy = 0; detectionStrategy<=sampleSize; detectionStrategy++){
+        sampleDetectionPrevalence.push_back(0);
+    }
 
     // Population vector will be updated and saved over time
     vector<int> cropsPopulationVector = {totalPopulations[0]-U0[0], U0[0], 0};
@@ -124,6 +136,7 @@ int simulate(int argc, char* argv[], const vector<double> betas, vector<double> 
     }
     MyFile2 << endl;
     for (int time = 1;time<=maxTime;time++) {
+        cout<<"boo"<<endl;
         // infection spread
         world.progress();
         // save infection to data to file
@@ -141,8 +154,33 @@ int simulate(int argc, char* argv[], const vector<double> betas, vector<double> 
             MyFile2 << ","<<sentinelsState.s;
         }
         MyFile2 << endl;
+
+        // If t an integer numebr of delta
+        // Performs all surveillance strategies that have not already detected the disease
+        // If disease is detected then sampleDetectionPrevalence, detectionChecker and 
+        // detectionCounter are updated
+        if (time%delta==0){
+            for (int detectionStrategy = 0; detectionStrategy<=sampleSize; detectionStrategy++){
+                bool individualChecker = detectionChecker[detectionStrategy];
+                if (individualChecker==false){
+                    double prevalence = surveille(individualChecker, totalPopulations, 
+                                                  detectionStrategy, sampleSize, time, filePath1, 
+                                                  filePath2);
+                    if (individualChecker==true) {
+                        detectionChecker[detectionStrategy] = true;
+                        detectionCounter += 1;
+                        sampleDetectionPrevalence[detectionStrategy] = prevalence;
+                    }
+                }
+            } 
+        }
+        
+        if (detectionCounter == sampleSize) {
+            break;
+        }
+        
     }
     MyFile1.close();
     MyFile2.close();
-    return 0;
+    return sampleDetectionPrevalence;
 }

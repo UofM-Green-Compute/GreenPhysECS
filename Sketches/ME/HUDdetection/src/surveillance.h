@@ -3,5 +3,7 @@
 #include <filesystem>
 
 using namespace std;
-vector<double> surveille(vector<int> totalPopulations, const int maxTime, const int delta,
-    filesystem::path filePath1, filesystem::path filePath2, int sampleSize);
+double surveille(bool &checker, const vector<int> totalPopulations, 
+    const int detectionStrategy, const int totalSampling,
+    const int time, filesystem::path filePath1, filesystem::path filePath2);
+    
