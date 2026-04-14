@@ -19,10 +19,6 @@ struct TransitionProbabilities { vector<double> qnm; }; // Transition from state
 mt19937 rng(random_device{}()) ; 
 uniform_real_distribution<double> dist(0,1); 
 
-// For each sampling strategy detection this goes up by one. If it equals the sampling size then
-// that means all strategies have detected the disease
-int detectionCounter = 0;
-
 void setupEntities(flecs::world world, vector<flecs::entity> &p, int totalPopulation, 
     int initialInfected, int plantType){
     for (int i = 0; i < totalPopulation-initialInfected; ++i) { 
@@ -62,7 +58,7 @@ void setupSystems(flecs::world &world, vector<int> &cropPopulation, vector<int> 
 
 vector<double> simulate(int argc, char* argv[], const vector<double> betas, vector<double> epsilons, 
     vector<double> gammas, vector<int> totalPopulations, vector<int> U0, 
-    const int maxTime, vector<bool> detectionChecker, int sampleSize, int delta,
+    vector<bool> detectionChecker, int sampleSize, int delta,
     filesystem::path filePath1, filesystem::path filePath2) {
     /*
     This function
@@ -73,7 +69,11 @@ vector<double> simulate(int argc, char* argv[], const vector<double> betas, vect
     5) Saves the data to a data file every time step
     */
 
-     // Fills the prevalence vector with zeroes so that it is the right size for indexing
+    // For each sampling strategy detection this goes up by one. If it equals the sampling size then
+    // that means all strategies have detected the disease
+    int detectionCounter = 0;
+
+    // Fills the prevalence vector with zeroes so that it is the right size for indexing
     vector<double> sampleDetectionPrevalence;
     for (int detectionStrategy = 0; detectionStrategy<=sampleSize; detectionStrategy++){
         sampleDetectionPrevalence.push_back(0);
@@ -135,10 +135,11 @@ vector<double> simulate(int argc, char* argv[], const vector<double> betas, vect
         MyFile2 << ","<<initialSentinelsState.s;
     }
     MyFile2 << endl;
-    for (int time = 1;time<=maxTime;time++) {
-        cout<<"boo"<<endl;
+    int time = 0;
+    while (detectionCounter<sampleSize) {
         // infection spread
         world.progress();
+        time +=1;
         // save infection to data to file
         MyFile1 << time; 
         MyFile2 << time;
@@ -174,11 +175,6 @@ vector<double> simulate(int argc, char* argv[], const vector<double> betas, vect
                 }
             } 
         }
-        
-        if (detectionCounter == sampleSize) {
-            break;
-        }
-        
     }
     MyFile1.close();
     MyFile2.close();

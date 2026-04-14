@@ -12,9 +12,6 @@
 
 using namespace std;
 
-// Parameters
-int MAX_TIME = 1000; // Maximum Simulation Time
-
 // Vectors of form {crops, sentinels}
 vector<double> BETAS = {5*pow(10,-5),5*pow(10, -5)}; // daily per capita infection rate
 vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
@@ -31,7 +28,7 @@ vector<bool> DETECTION_CHECKER; // each index says if that strategy has detected
 
 
 // Sample Parameters
-int sampleNumber = 1000; // total number of samples
+int sampleNumber = 5; // total number of samples
 
 double findMean(vector<vector<double>> matrix, int column) {
     int numberRows = matrix.size();
@@ -102,11 +99,15 @@ int main(int argc, char* argv[]) {
         filesystem::path FILEPATH1 = setupPath / FILENAME1;
         filesystem::path FILEPATH2 = setupPath / FILENAME2;
         vector<double> sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
-            TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, DETECTION_CHECKER, SAMPLE_SIZE, DELTA, FILEPATH1, FILEPATH2);
+            TOTAL_NUMBER, SICK_PLANTS, DETECTION_CHECKER, SAMPLE_SIZE, DELTA, FILEPATH1, FILEPATH2);
+        for (int iteration = 0; iteration <= SAMPLE_SIZE; iteration++){
+            cout<<sampleDetectionPrevalence[iteration]<<endl;
+        }
         iterationPrevalence.push_back(sampleDetectionPrevalence);
     }
 
     for (int iteration = 0; iteration <= SAMPLE_SIZE; iteration++){
+
         double EDPmean = findMean(iterationPrevalence, iteration);
         double EDPstd = findSTD(iterationPrevalence, iteration, EDPmean);
         MyFileMean << (SAMPLE_SIZE-iteration) << "," << EDPmean << endl;

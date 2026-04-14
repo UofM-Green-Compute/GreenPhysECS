@@ -30,6 +30,7 @@ void selectIndices(vector<int> &shuffledIndices, vector<int> &detectionIndices, 
     for(unsigned int i = 0; i < (unsigned) sampleSize; i++) {
         detectionIndices.push_back(shuffledIndices[i]);
     }
+    cout<<shuffledIndices[0]<<endl;
 }
 
 vector<int> split(const string &s, char delimiter) {     
@@ -73,7 +74,7 @@ double calculatePrevalence(vector<int> vector1, vector<int>vector2, vector<int> 
 
 double surveille(bool &checker, const vector<int> totalPopulations, const int sentinelSample, 
     const int totalSampling, const int time, filesystem::path filePath1, filesystem::path filePath2) {
-    int prevalence = 0; // default return value if no disease is detected
+    double prevalence = 0; // default return value if no disease is detected
     ifstream MyFile1(filePath1); // crops
     ifstream MyFile2(filePath2); // crops
     vector<int> cropShuffledIndices; // This vector contains indices of crops which will be checked
@@ -94,25 +95,29 @@ double surveille(bool &checker, const vector<int> totalPopulations, const int se
 
     // try detecting the disease. if that works, set checker = true and record prevalence
     int cropSample = totalSampling-sentinelSample;
+    
     selectIndices(cropShuffledIndices, cropDetectionIndices, cropSample);
     selectIndices(sentinelShuffledIndices, sentinelDetectionIndices, sentinelSample);
+    
     if (cropSample!=0) {
         for (int cropIndex : cropDetectionIndices){
-            if (cropData[time+1][cropIndex+1]==3){
+            if (cropData[time][cropIndex]==3){
                 checker = true;
             }
         }
     }
+    
     if (sentinelSample!=0) {
         for (int sentinelIndex : sentinelDetectionIndices) {
-            if (sentinelData[time+1][sentinelIndex+1]==3){
+            if (sentinelData[time][sentinelIndex]==3){
                 checker = true;
             }
         }
     }
     
     if (checker == true) {
-        prevalence = calculatePrevalence(cropData[time+1], sentinelData[time+1], totalPopulations);
+        prevalence = calculatePrevalence(cropData[time], sentinelData[time], totalPopulations);
     }
+    
     return prevalence;
 }
