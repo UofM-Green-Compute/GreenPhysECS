@@ -11,7 +11,7 @@ System 6: Move people who are on the upper wall
 System 7: Move people who are on the right wall
 System 8: Move people who are on the lower wall
 System 9: Move people who are on the upper left corner
-System 10: Move people who are on the upper right corner
+System 10: Move people who  are on the upper right corner
 System 11: Move people who are on the lower left corner
 System 12: Move people who are on the lower right corner
 System 13: Move everyone else who is in the bulk
@@ -24,6 +24,7 @@ System 13: Move everyone else who is in the bulk
 #include <vector>
 #include <cmath>
 #include <random>
+#include <system.h>
 
 double timeStep = 0.1; // Set timestep = 0.0001
 double maxTime = 5000; // Maximum Simulation Time
@@ -35,7 +36,7 @@ double speed = 1;
 double lambda = speed/latticeSpacing;
 double pStay = exp(-lambda*timeStep); // probability of staying is an exponential with time
 double pMove = 1-pStay; // probability of moving at any time step
-int numberOfPeople = 100; // number of people in our system
+int numberOfPeople = 2000; // number of people in our system
 
 // Transition constants
 double beta = 10 / static_cast<double>(numberOfPeople); // infection rate
@@ -48,8 +49,8 @@ int n3 = 0; // State 3 (recovered)
 std::vector<int> population = {n1, n2, n3}; // where population updates occur
 std::vector<std::vector<int>> infectionMatrix; // number of infected people at each point in space
 
-int Lx = 50; // x-direction spatial extent of lattice in units of lattice spacing
-int Ly = 50; // y-direction spatial extent of lattice in units of lattice spacing
+int Lx = 100; // x-direction spatial extent of lattice in units of lattice spacing
+int Ly = 100; // y-direction spatial extent of lattice in units of lattice spacing
 
 struct Position { int x, y; }; // position struct
 // These tags tell you the state of the entity
@@ -84,6 +85,12 @@ double generateProbability() {
     return distrib(gen);
 }
 
+void setupSystems(flecs::world &world, std::vector<std::vector<int>> &infectionMatrix) {
+    updateInfectionMatrix(world, infectionMatrix);
+    updateSusceptibleProbabilities(world, infectionMatrix, beta, timeStep);
+}
+
+
 int main(int argc, char* argv[]) {
     double t = 0; // initialize time = 0
     std::ofstream MyFilePerson1; // Create file variable
@@ -114,52 +121,6 @@ int main(int argc, char* argv[]) {
     MyFileInfection << "Time,Susceptible,Infected,Recovered" << std::endl; // Set column labels
 
     flecs::world world(argc, argv);
-
-    // Create Phases which tell the program in which order to run the system
-    // Creates a matrix of infected people
-    flecs::entity matrixPhase = world.entity()
-        .add(flecs::Phase);
-    // This Phase updates the SIR transition probabilities for each susceptible entity based on
-    // number of infected people on the same tile
-    flecs::entity markovPhase = world.entity()
-        .add(flecs::Phase)
-        .depends_on(matrixPhase);
-     // This phase changes states dependenent on probabilities found in previous system
-    flecs::entity transitionPhase = world.entity()
-        .add(flecs::Phase)
-        .depends_on(markovPhase); 
-    // This Phase sees if person is on edge, corner etc.
-    flecs::entity findTagPhase = world.entity()
-        .add(flecs::Phase)
-        .depends_on(transitionPhase);
-    // These phases calculate new position. calculation depends on tag
-    flecs::entity leftWallMove = world.entity() 
-        .add(flecs::Phase) 
-        .depends_on(findTagPhase);
-    flecs::entity upWallMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(leftWallMove);
-    flecs::entity rightWallMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(upWallMove);
-    flecs::entity downWallMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(rightWallMove);
-    flecs::entity upLeftCornerMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(downWallMove);
-    flecs::entity upRightCornerMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(upLeftCornerMove);
-    flecs::entity downLeftCornerMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(upRightCornerMove);
-    flecs::entity downRightCornerMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(downLeftCornerMove);
-    flecs::entity bulkMove = world.entity()
-        .add(flecs::Phase)
-        .depends_on(downRightCornerMove);
 
     // Create components inside world
     world.component<Position>();
@@ -200,80 +161,11 @@ int main(int argc, char* argv[]) {
                 .set<State>({2})      
         );
     }
+
+    setupSystems(world, infectionMatrix);
     
-    // update infection matrix
-    world.system<Position>()
-        .kind(matrixPhase)
-        .with<InfectedTag>()
-        .each([&](Position &pos){
-            infectionMatrix[pos.x][pos.y]+=1;
-            //std::cout<<"Segmentation fault??? 1"<<"\n";
-        });
-
-    // update susceptible markov probabilities
-    world.system<State, MarkovProbabilities, Position>()
-        .kind(markovPhase)
-        .each([&](State &state, MarkovProbabilities& prob, Position &pos){
-        // find number of infected people on your and update probabilities
-        if (state.s == 1) {
-            int infectedContact = infectionMatrix[pos.x][pos.y];
-            prob.q1 = exp(-beta * infectedContact * timeStep);
-            prob.q2 = 1-prob.q1;
-            prob.q3 = 0;
-            //std::cout<<"Segmentation Fault??? 2"<<"\n";
-        }
-        });
-
-    world.system<State, MarkovProbabilities>()
-        .kind(transitionPhase)
-        .each([&](flecs::entity e, State& state, MarkovProbabilities& prob){
-            double rand = generateProbability(); // random number between 0 and 1
-            if(rand < prob.q1){
-                // transition to state 1 (susceptible) 
-                if (state.s == 2) {
-                    population[0] += 1;
-                    population[1] -= 1;  
-                } else if (state.s == 3) {
-                    population[0] += 1;
-                    population[2] -= 1;  
-                }
-                state.s = 1;
-            } else if((rand > prob.q1) && (rand < (prob.q1 + prob.q2))){
-                // transition to state 2 (infected)
-                if (state.s == 1) {
-                    population[1] += 1;
-                    population[0] -= 1;
-                    e.add<InfectedTag>();
-                } else if (state.s == 3) {
-                    population[1] += 1;
-                    population[2] -= 1;  
-                    e.add<InfectedTag>();
-                }
-                state.s = 2;
-                prob.q1 = 0;
-                prob.q2 = exp(-alpha*timeStep);
-                prob.q3 = 1-prob.q2;
-            } else if((rand > (prob.q1 + prob.q2)) && (rand < (prob.q1 + prob.q2 + prob.q3))){
-                // transition to state 3 (recovered)
-                if (state.s == 1) {
-                    population[2] += 1;
-                    population[0] -= 1;
-                } else if (state.s == 2) {
-                    population[2] += 1;
-                    population[1] -= 1;
-                    e.remove<InfectedTag>();
-                }
-                state.s = 3;
-                prob.q1 = 0;
-                prob.q2 = 0;
-                prob.q3 = 1;
-                //std::cout<<"Segmentation Fault??? 3"<<"\n";
-            }
-        });
-
     // System to add tag to entities dependent on position
     world.system<Position>()
-        .kind(findTagPhase)
         .each([&](flecs::entity e, Position& pos){
             if (pos.x == 0 && pos.y == 0) {
                 e.add<UpperLeftTag>();
@@ -299,7 +191,6 @@ int main(int argc, char* argv[]) {
     
     world.system<Position>()
         .with<LeftTag>()
-        .kind(leftWallMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/3) {
@@ -318,7 +209,6 @@ int main(int argc, char* argv[]) {
     
     world.system<Position>()
         .with<UpTag>()
-        .kind(upWallMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/3) {
@@ -337,7 +227,6 @@ int main(int argc, char* argv[]) {
 
     world.system<Position>()
         .with<RightTag>()
-        .kind(rightWallMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/3) {
@@ -356,7 +245,6 @@ int main(int argc, char* argv[]) {
 
     world.system<Position>()
         .with<DownTag>()
-        .kind(downWallMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/3) {
@@ -375,7 +263,6 @@ int main(int argc, char* argv[]) {
 
     world.system<Position>()
         .with<UpperLeftTag>()
-        .kind(upLeftCornerMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/2) {
@@ -391,7 +278,6 @@ int main(int argc, char* argv[]) {
     
     world.system<Position>()
         .with<UpperRightTag>()
-        .kind(upRightCornerMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/2) {
@@ -407,7 +293,6 @@ int main(int argc, char* argv[]) {
 
     world.system<Position>()
         .with<LowerLeftTag>()
-        .kind(downLeftCornerMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/2) {
@@ -423,7 +308,6 @@ int main(int argc, char* argv[]) {
     
     world.system<Position>()
         .with<LowerRightTag>()
-        .kind(downRightCornerMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/2) {
@@ -439,7 +323,6 @@ int main(int argc, char* argv[]) {
 
     world.system<Position>()
         .with<BulkTag>()
-        .kind(bulkMove)
         .each([&](flecs::entity e, Position& pos){
         double p = generateProbability(); // number between 0 and 1
         if (p < pMove/4) {
