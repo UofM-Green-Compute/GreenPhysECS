@@ -1,0 +1,14 @@
+#include <flecs.h>
+#include <systems.h>
+#include <vector>
+
+void updateInfectedNumbers(flecs::world &world, std::vector<flecs::entity> &sentinels,
+    std::vector<flecs::entity> &crops, flecs::entity &uLink, flecs::entity &dLink);
+
+void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, std::vector<double> &scalings, 
+    std::vector<double> &presymptomaticTimes);
+
+void transition(flecs::world &world, std::vector<int> &cropsPopulation, std::vector<int> &sentinelsPopulation);
+
+void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::vector<flecs::entity> &sentinels,
+                 flecs::entity &hLink, flecs::entity &uLink, flecs::entity &dLink);

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 NumberCrops = 1000
-NumberSentinels = 49
+NumberSentinels = 20
 Delta=30
 
 rootFolder = os.path.dirname(os.path.dirname(__file__))

@@ -23,15 +23,15 @@ vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
 vector<double> GAMMAS = {452, 49};
 
 // Initial Conditions
-vector<int> TOTAL_NUMBER = {1000, 50}; // total number of plants
+vector<int> TOTAL_NUMBER = {1000, 20}; // total number of plants
 bool baseline;
 
 // Detection Parameters
 int DELTA = 30;
-int SAMPLE_SIZE = 50;
+int SAMPLE_SIZE = 20;
 
 // Sample Parameters
-int sampleNumber = 100; // total number of samples
+int sampleNumber = 1000; // total number of samples
 
 double findMean(vector<vector<double>> matrix, int column) {
     int numberRows = matrix.size();
@@ -101,7 +101,9 @@ int main(int argc, char* argv[]) {
         } else {
             SICK_PLANTS = {0, 1};
         }
-        cout<<"Sample = "<<sampleCounter<<endl;
+        if (sampleCounter % 100 == 0) {
+            cout<<"Sample = "<<sampleCounter<<endl;
+        }
         vector<double> sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
             TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline);
         iterationPrevalence.push_back(sampleDetectionPrevalence);

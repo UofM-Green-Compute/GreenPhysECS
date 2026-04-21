@@ -14,6 +14,7 @@ struct Index { int plantNumber; }; // what is your index within your vector
 struct MarkovState { int s; }; // Track current markov state of entity
 struct PlantState { int type; }; // 0: crop. 1: sentinel
 struct TransitionProbabilities { vector<double> qnm; }; // Transition from state m to state n = 1,2, 3
+struct InfectedConnections { int u,d; }; // No. of infected people an individual is connected to. u:undetectable, d:detectable
 
 // Tools for picking random numbers from a uniform distribution
 mt19937 rng(random_device{}()) ; 
@@ -22,6 +23,15 @@ uniform_real_distribution<double> dist(0,1);
 // states for readability
 enum states {healthy = 1, undetectable = 2, detectable = 3};
 enum plantType {cropType = 0, sentinelType = 1};
+
+void setupComponents(flecs::world &world){
+    // what these components do is outlined when the structs are defined
+    world.component<Index>();
+    world.component<MarkovState>();
+    world.component<PlantState>();
+    world.component<TransitionProbabilities>();
+    world.component<InfectedConnections>();
+}
 
 void setupEntities(flecs::world &world, vector<flecs::entity> &p, int totalPopulation, 
     int initialInfected, int plantType){
@@ -38,6 +48,7 @@ void setupEntities(flecs::world &world, vector<flecs::entity> &p, int totalPopul
                 .set<MarkovState>({healthy})
                 .set<PlantState> ({plantType})
                 .set<TransitionProbabilities>({Qnm})
+                .set<InfectedConnections>({0,0})
         ); 
     } 
     // generate your undetecatble but infected entities
@@ -54,13 +65,6 @@ void setupEntities(flecs::world &world, vector<flecs::entity> &p, int totalPopul
     }
 }
 
-void setupComponents(flecs::world &world){
-    // what these components do is outlined when the structs are defined
-    world.component<Index>();
-    world.component<MarkovState>();
-    world.component<PlantState>();
-    world.component<TransitionProbabilities>();
-}
 
 void setupSystems(flecs::world &world, vector<int> &cropPopulation, vector<int> &sentinelPopulation,
     const vector<double> &infectionRates, vector<double> &scalings, vector<double> &presymptomaticTimes) {
@@ -249,7 +253,25 @@ vector<double> simulate(int argc, char* argv[], const vector<double> &betas, vec
     // initial time is some random point in [0,Delta]
     double randTimeFraction = dist(rng); 
     int time = static_cast<int>(delta * randTimeFraction);
-    while (strategyCounter<=sampleSize && baselineChecker==false) { // first condition will eventually become false for strategy case and second will eventually become true in basline case
+    if (baseline == true) {
+        while (baselineChecker==false) {
+            // infection spread
+            world.progress();
+            time +=1;
+            // if time is not an integer multiple of delta then do not carry out surveillance
+            // and move to the next time step
+            if (time%delta!=0) {
+                continue;
+            }
+            // shuffle the indices for surveillance sampling
+            shuffle(begin(cropDetectionIndices), end(cropDetectionIndices), rng);
+            shuffle(begin(sentinelDetectionIndices), end(sentinelDetectionIndices), rng);
+            // implement surveillance
+            baselineSurveillance(crops, cropDetectionIndices, sampleDetectionPrevalence, 
+                                 cropsPopulationVector, totalPopulations, maxCropSample, baselineChecker);
+        }
+    } else {
+        while (strategyCounter<=sampleSize) {
         // infection spread
         world.progress();
         time +=1;
@@ -262,14 +284,11 @@ vector<double> simulate(int argc, char* argv[], const vector<double> &betas, vec
         shuffle(begin(cropDetectionIndices), end(cropDetectionIndices), rng);
         shuffle(begin(sentinelDetectionIndices), end(sentinelDetectionIndices), rng);
         // implement surveillance
-        if (baseline == true) {
-            baselineSurveillance(crops, cropDetectionIndices, sampleDetectionPrevalence, 
-                                 cropsPopulationVector, totalPopulations, maxCropSample, baselineChecker);
-        } else {
-            strategySurveillance(sentinels, crops, sentinelDetectionIndices, 
-                                 cropDetectionIndices, sampleDetectionPrevalence, 
-                                 sampleSize, cropsPopulationVector, totalPopulations, maxSentinelSample, 
-                                 maxCropSample, strategyChecker, strategyCounter);  
+        strategySurveillance(sentinels, crops, sentinelDetectionIndices, 
+                                cropDetectionIndices, sampleDetectionPrevalence, 
+                                sampleSize, cropsPopulationVector, totalPopulations, maxSentinelSample, 
+                                maxCropSample, strategyChecker, strategyCounter);  
+    
         }
     }
     return sampleDetectionPrevalence;
