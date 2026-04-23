@@ -25,10 +25,7 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalP
     for (int i = 0; i < totalPopulation-initialInfected; ++i) { 
         // x and y are the random positions of the crops
         double x = dist(rng); 
-        double y = dist(rng); 
-        if (i == 0) {
-            std::cout<<"x, y = " << x << ", " << y << std::endl;
-        }
+        double y = dist(rng);
         std::vector<double> Qnm = {0, 0, 0}; 
         p.push_back( 
             world.entity() 
@@ -45,9 +42,6 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalP
         // x and y are the random positions of the crops
         double x = dist(rng); 
         double y = dist(rng); 
-        if (i == 0) {
-            std::cout<<"x, y = " << x << ", " << y << std::endl;
-        }
         std::vector<double> Qnm = {0, 0, 0}; 
         p.push_back( 
             world.entity() 
@@ -74,13 +68,13 @@ void setupComponents(flecs::world world){
 
 void setupSystems(flecs::world &world, std::vector<flecs::entity> &crops, std::vector<flecs::entity> &sentinels,
                   flecs::entity &hLink, flecs::entity &uLink, flecs::entity &dLink, 
-                  std::vector<double> infectionRates, std::vector<double> scalings, 
-                  std::vector<double> presymptomaticTimes, std::vector<int> cropPopulation, 
-                  std::vector<int> sentinelPopulation) {
+                  const std::vector<double> infectionRates, const std::vector<double> scalings, 
+                  const std::vector<double> &presymptomaticTimes, std::vector<int> &cropPopulation, 
+                  std::vector<int> &sentinelPopulation) {
     updateInfectedNumbers(world, sentinels, crops, uLink, dLink);
     updateProbabilities(world, infectionRates, scalings, presymptomaticTimes);
     transition(world, cropPopulation, sentinelPopulation);
-    updateGraph(world, crops, sentinels, hLink, uLink, dLink);
+    updateGraph(world, crops, sentinels, hLink, uLink, dLink); 
 }
 
 double findPlantDistance (flecs::entity plant1, flecs::entity plant2) {
@@ -104,7 +98,7 @@ void addLink(flecs::entity plant1, flecs::entity plant2, flecs::entity hLink, fl
     // if either plant is detectable, add detectable link
     if (plant1.get<MarkovState>().s == detectable || plant2.get<MarkovState>().s == detectable) {
         plant1.add(dLink, plant2);
-        plant2.add(dLink, plant2);
+        plant2.add(dLink, plant1);
     }
     else if (plant1.get<MarkovState>().s == undetectable || plant2.get<MarkovState>().s == undetectable) {
         plant1.add(uLink, plant2);
@@ -126,7 +120,7 @@ void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flec
             addLink(sentinelPopulation[i], sentinelPopulation[k], hLink, uLink, dLink, radius);
         }
         // compare with all crops
-        for (int k = i+1; k < noCrops; k++){
+        for (int k = 0; k < noCrops; k++){
             addLink(sentinelPopulation[i], cropPopulation[k], hLink, uLink, dLink, radius);
         }
     }
@@ -139,8 +133,8 @@ void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flec
     }
 }
 
-int simulate(int argc, char* argv[], const std::vector<double> betas, std::vector<double> epsilons, 
-    std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
+int simulate(int argc, char* argv[], const std::vector<double> betas, const std::vector<double> epsilons, 
+    const std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
     const int maxTime, std::string filename1, std::string filename2, double radius) {
     /*
     This function
@@ -171,10 +165,11 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
     flecs::entity healthyLink = world.entity(); // both plants are healthy
     flecs::entity undetectableLink = world.entity(); // at least one plant is undetectable
     flecs::entity detectableLink = world.entity(); // at least one plant is detectable
-    setupGraph(sentinels, crops, healthyLink, undetectableLink, detectableLink, U0[1], U0[0], radius);
+    setupGraph(sentinels, crops, healthyLink, undetectableLink, detectableLink, totalPopulations[1], 
+               totalPopulations[0], radius);
     // Create the systems
-    setupSystems(world, crops, sentinels, healthyLink, undetectableLink, detectableLink, betas,
-        epsilons, gammas, cropsPopulationVector, sentinelsPopulationVector);
+    setupSystems(world, crops, sentinels, healthyLink, undetectableLink, detectableLink,
+                 betas, epsilons, gammas, cropsPopulationVector, sentinelsPopulationVector);
 
     // Run the simulation
     std::ofstream MyFile1; // crops
@@ -188,11 +183,14 @@ int simulate(int argc, char* argv[], const std::vector<double> betas, std::vecto
             << cropsPopulationVector[2] << std::endl;  
     MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","
             << sentinelsPopulationVector[2] << std::endl;  
+    
     while (time<maxTime) {
         world.progress();
         time += 1;
         std::cout<<time<<std::endl;    
         // update sample variables
+        std::cout << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
+            << cropsPopulationVector[2] << std::endl; 
         MyFile1 << time << "," << cropsPopulationVector[0] << "," << cropsPopulationVector[1] << ","
             << cropsPopulationVector[2] << std::endl;  
         MyFile2 << time << "," << sentinelsPopulationVector[0] << "," << sentinelsPopulationVector[1] << ","

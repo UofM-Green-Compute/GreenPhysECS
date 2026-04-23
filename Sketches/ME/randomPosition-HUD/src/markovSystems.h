@@ -5,8 +5,8 @@
 void updateInfectedNumbers(flecs::world &world, std::vector<flecs::entity> &sentinels,
     std::vector<flecs::entity> &crops, flecs::entity &uLink, flecs::entity &dLink);
 
-void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, std::vector<double> &scalings, 
-    std::vector<double> &presymptomaticTimes);
+void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, const std::vector<double> &scalings, 
+    const std::vector<double> &presymptomaticTimes);
 
 void transition(flecs::world &world, std::vector<int> &cropsPopulation, std::vector<int> &sentinelsPopulation);
 

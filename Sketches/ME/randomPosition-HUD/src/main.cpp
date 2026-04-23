@@ -12,13 +12,13 @@ int MAX_TIME = 3000; // Maximum Simulation Time
 double RADIUS = 0.1;
 
 // Vectors of form {crops, sentinels}
-std::vector<double> BETAS = {5*pow(10,-5),5*pow(10, -5)}; // daily per capita infection rate
+std::vector<double> BETAS = {5*pow(10,-5),5*pow(10,-5)}; // daily per capita infection rate
 std::vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
 std::vector<double> GAMMAS = {452, 49};
 
 // Initial Conditions
 std::vector<int> TOTAL_NUMBER = {100, 100}; // total number of plants
-std::vector<int> SICK_PLANTS = {3, 0}; //total number of sick plants
+std::vector<int> SICK_PLANTS = {5, 0}; //total number of sick plants
 
 // Sample Parameters
 int sampleCounter1 = 1; // Set sample counter = 1
