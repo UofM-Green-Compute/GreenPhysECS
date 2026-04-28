@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.12.11)  10 MAR 2026 16:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.12.11)  25 APR 2026 13:49
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -534,8 +534,7 @@ tion.
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count297
 \l__pdf_internal_box=\box63
-)
-No file external_figures/figureMaking-figure_crossref0.aux.
+) (./figureMaking.aux)
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 17.
 LaTeX Font Info:    ... okay on input line 17.
 LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 17.
@@ -626,10 +625,11 @@ Overfull \hbox (31.06383pt too wide) in paragraph at lines 145--194
 [][]  [] 
  []
 
+\openout4 = `external_figures/figureMaking-figure_crossref0.dpth'.
 
-LaTeX Warning: Reference `\pgfplotslegendfromname{namedLegendMacroscopicSIR}' o
-n page 4 undefined on input line 200.
+[4
 
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
 isable this.
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
@@ -645,10 +645,8 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 244.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 244.
-
-LaTeX Warning: Reference `\pgfplotslegendfromname{namedLegendSIREnsemble}' on p
-age 4 undefined on input line 252.
-
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
 isable this.
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
@@ -660,51 +658,25 @@ Overfull \hbox (2.61108pt too wide) in paragraph at lines 254--349
 
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
 isable this.
-
-LaTeX Warning: Reference `\pgfplotslegendfromname{namedLegendSIREnsembleRandomW
-alk}' on page 4 undefined on input line 384.
-
-A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
-isable this.
-A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
-isable this.
-
-Overfull \hbox (2.61108pt too wide) in paragraph at lines 386--481
-[] [] 
- []
-
-\openout3 = `external_figures/figureMaking-figure_crossref0.dpth'.
-
-
-! Package tikz Error: Sorry, image externalization failed: the resulting image 
-was EMPTY. I tried to externalize 'external_figures/figureMaking-figure_crossre
-f0', but it seems there is no such image in the document!?  
-   You are currently using 'mode=convert with system call'. This problem can ha
-ppen if the image (or one of the images preceding it) was declared inside of a 
-\label{} (i.e. in the .aux file): 'convert with system call' has no access to t
-he main aux file.
-   Possible solutions in this case:
-   (a) Try using 'mode=list and make',
-   (b) Issue the externalization command 'pdflatex -shell-escape -halt-on-error
- -interaction=batchmode -jobname "external_figures/figureMaking-figure_crossref
-0" "\def\tikzexternalrealjob{figureMaking}\input{figureMaking}"' *manually* (al
-so check the preceding externalized images, perhaps the file name sequence is n
-ot correct).
-   Repeat: the resulting image was EMPTY, your attention is required .
-
-See the tikz package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.484 \end{document}
-                     
+ ***********
+LaTeX2e <2023-11-01> patch level 1
+L3 programming layer <2024-01-22>
+ ***********
+ ) 
 Here is how much of TeX's memory you used:
- 25267 strings out of 476182
- 668047 string characters out of 5795594
- 1927975 words of memory out of 5000000
- 46876 multiletter control sequences out of 15000+600000
- 562019 words of font info for 49 fonts, out of 8000000 for 9000
+ 25364 strings out of 476182
+ 669126 string characters out of 5795594
+ 1928975 words of memory out of 5000000
+ 46970 multiletter control sequences out of 15000+600000
+ 561712 words of font info for 48 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 88i,5n,96p,782b,609s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 88i,18n,96p,5658b,1279s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb>
+Output written on external_figures/figureMaking-figure_crossref0.pdf (1 page, 1
+2572 bytes).
+PDF statistics:
+ 16 PDF objects out of 1000 (max. 8388607)
+ 10 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 13 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-!  ==> Fatal error occurred, no output PDF file produced!

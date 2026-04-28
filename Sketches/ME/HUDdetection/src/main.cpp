@@ -23,15 +23,15 @@ vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
 vector<double> GAMMAS = {452, 49};
 
 // Initial Conditions
-vector<int> TOTAL_NUMBER = {1000, 20}; // total number of plants
+std::vector<int> TOTAL_NUMBER = {50, 10}; // total number of plants
 bool baseline;
 
 // Detection Parameters
 int DELTA = 30;
-int SAMPLE_SIZE = 20;
+int SAMPLE_SIZE = 10;
 
 // Sample Parameters
-int sampleNumber = 1000; // total number of samples
+int sampleNumber = 2000; // total number of samples
 
 double findMean(vector<vector<double>> matrix, int column) {
     int numberRows = matrix.size();

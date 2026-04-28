@@ -31,10 +31,9 @@ double latticeSpacing = 1; // lattice spacing in metres
 // such that the number of steps per second is 1. Therefore lambda = 1.
 double speed = 1; 
 double lambda = speed/latticeSpacing;
-double pStay = exp(-lambda*timeStep); // probability of staying is an exponential with time
-double pMove = 1-pStay; // probability of moving at any time step
-int numberOfPeople = 100; // number of people in our system
-
+double pMove = lambda*timeStep; // probability of moving at any time step
+double pStay = 1-pMove; // probability of staying is an exponential with time
+int numberOfPeople = 1; // number of people in our system
 int Lx = 50; // x-direction spatial extent of lattice in each direction in units of lattice spacing
 int Ly = 50; // y-direction spatial extent of lattice in each direction in units of lattice spacing
 
@@ -303,9 +302,6 @@ int main(int argc, char* argv[]) {
             const Position& pos = people[i].get<Position>();
             files[i] << t << ", " << pos.x << ", " << pos.y << std::endl; 
         }
-        // Print
-        std::cout << "time = " << t << std::endl;
-        std::cout << "----\n";
     }
     for (int i = 0; i < numberOfPeople; ++i) {
         files[i].close();
