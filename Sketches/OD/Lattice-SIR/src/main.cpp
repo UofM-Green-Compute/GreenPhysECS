@@ -1,87 +1,51 @@
-/*
-Oluwole Delano
-Created 24/3/26
-*/
-
 #include <flecs.h>
 #include <iostream>
 #include <fstream>
 #include <random>
 #include <time.h> 
+#include "Simulation.h"
 
-double X_LIM = 1;
-double Y_LIM = 1;
+// Parameters
+int MAX_TIME = 3000; // Maximum Simulation Time
 
-double a = 0.1;
-double b = 0.2;
-double psi = M_PI / 4; // Allowed values: 0 <= psi <= PI (radians)
+double RADIUS = 1.5;
 
-struct grid_point { double x,y; }; 
-struct PeopleIndex { int p; }; 
-struct State { int s; }; // Track current state of entity
+// Vectors of form {crops, sentinels}
+std::vector<double> BETAS = {5*pow(10,-1),5*pow(10,-1)}; // daily per capita infection rate
+std::vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
+std::vector<double> GAMMAS = {452, 49};
 
-void buildLattice(flecs::world world, std::vector<flecs::entity> &p, std::ofstream &MyFile) {
+// Initial Conditions
+std::vector<int> TOTAL_NUMBER = {100, 100}; // total number of plants {Crops, Sentinels}
+std::vector<int> SICK_PLANTS = {5, 0}; // total number of sick plants {Crops, Sentinels}
 
-    double x = 0; 
-    double y = 0; 
-
-    int i_lim = std::floor(X_LIM / a);
-    int j_lim = std::floor(Y_LIM / b);
-
-    int j = 0; 
-    int no_a = 0; 
-    while(y+a <= Y_LIM){
-        y = j * b * sin(psi) ; 
-        if(psi > M_PI / 2){ x = j * b * -cos(psi); }
-        else{x = j * b * cos(psi); }
-        no_a = std::floor(x/a); 
-        x = x - no_a * a; 
-
-        while(x+a <= X_LIM){
-            x += a; 
-            MyFile << x << "," << y << "|" ; 
-            // Create an entity corresponding to this grid point
-            p.push_back(
-                world.entity()
-                    .set<grid_point>({x,y})
-            ); 
-        }
-        MyFile << std::endl; 
-        j+=1; 
-    }
-    
-}
-
-void setupEntities(flecs::world world, std::vector<flecs::entity> &p, int totalPopulation, 
-    int initialInfected, int initialRecovered){
-    for (int i = 0; i < totalPopulation-initialInfected-initialRecovered; ++i) { 
-        p[i].set<PeopleIndex>({i}); 
-        p[i].set<State>({1}); 
-    } 
-    for (int i = 0; i < initialInfected; ++i) { 
-        p[i].set<PeopleIndex>({totalPopulation-initialInfected-initialRecovered + i});
-        p[i].set<State>({2});
-    }
-    for (int i = 0; i < initialRecovered; ++i) { 
-        p[i].set<PeopleIndex>({totalPopulation-initialRecovered + i});
-        p[i].set<State>({3});
-    }
-}
+// Sample Parameters
+int sampleNumber = 2; // total number of samples
 
 int main(int argc, char* argv[]) {
+
+    // Start measuring run time of program 
+    clock_t tClock; 
+    tClock = clock(); 
 
     // Create the world 
     flecs::world world;
 
-    // Create vector for plant population
-    std::vector<flecs::entity> population; 
+    for(int sampleCounter = 1; sampleCounter <= sampleNumber; sampleCounter++){
+        std::cout<<"Sample "<<sampleCounter<<std::endl; 
+        // Set file names
+        char FILENAME1[50]; 
+        char FILENAME2[50]; 
+        sprintf(FILENAME1, "HUDcrops_%d.txt", sampleCounter);
+        sprintf(FILENAME2, "HUDsentinels_%d.txt", sampleCounter);
+        std::string FILENAME3 = "Lattice-Grid.txt"; 
+        // Run Simulation
+        simulate(argc, argv, BETAS, EPSILONS, GAMMAS, TOTAL_NUMBER, SICK_PLANTS, MAX_TIME, RADIUS, FILENAME1, FILENAME2, FILENAME3); 
+    }
 
-    // Open files 
-    std::ofstream MyFile; 
-    MyFile.open("Lattice-Grid.txt"); 
-
-    // Call fucntion to build up the lattice 
-    buildLattice(world, population, MyFile); 
-
+    // Record How long the simulation took
+    tClock = clock() - tClock; 
+    double time_taken = ((double)tClock) / CLOCKS_PER_SEC;  
+    std::cout<<"RUN TIME: "<<time_taken<<"s"<<std::endl;
 }
 
