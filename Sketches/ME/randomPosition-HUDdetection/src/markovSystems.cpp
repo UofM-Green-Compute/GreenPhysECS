@@ -18,35 +18,6 @@ struct InfectedCropConnections { int u,d; }; // No. of infected crops an individ
 enum states {healthy = 1, undetectable = 2, detectable = 3};
 enum plantType {cropType = 0, sentinelType = 1};
 
-void updateInfectedNumbers(flecs::world &world, std::vector<flecs::entity> &sentinels,
-    std::vector<flecs::entity> &crops, flecs::entity &uLink, flecs::entity &dLink){
-    world.system<InfectedSentinelConnections, InfectedCropConnections>()
-        .each([&](flecs::entity e, InfectedSentinelConnections &sentinelInfected, 
-                  InfectedCropConnections &cropInfected){
-            
-            sentinelInfected.u = 0; 
-            sentinelInfected.d = 0;
-            for(int sentinelIndex = 0; sentinelIndex < (int) sentinels.size(); sentinelIndex++){
-                if(e.has(uLink,sentinels[sentinelIndex])) { 
-                    sentinelInfected.u += 1; 
-                }
-                else if(e.has(dLink,sentinels[sentinelIndex])) { 
-                    sentinelInfected.d += 1; 
-                }
-            }
-            cropInfected.u = 0; 
-            cropInfected.d = 0;
-            for(int cropIndex = 0; cropIndex < (int) crops.size(); cropIndex++){
-                if(e.has(uLink,crops[cropIndex])) { 
-                    cropInfected.u += 1; 
-                }
-                else if(e.has(dLink,crops[cropIndex])) { 
-                    cropInfected.d += 1; 
-                }
-            }    
-        }); 
-}
-
 void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, const std::vector<double> &scalings, 
     const std::vector<double> &presymptomaticTimes) {
     /*
@@ -130,15 +101,15 @@ void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::ve
         // if e.has(hlink) or e.has(uLink) -----> remove link and add dLink
         // if e.has(dLink) -----> do nothing
 
-
     // if entity in U
         // if e.has(hLink) -----> remove hLink and add uLink
         // if e.has(uLink) or e.has(dLink) ----> do nothing
 
     // only change e.has not plant[index].has because that might mess with thing if
     // systems run parallel in future
-    world.system<Index, MarkovState, PlantState>()
-        .each([&](flecs::entity e, Index& plantIndex, MarkovState& state, PlantState &plantState){
+    world.system<Index, MarkovState, PlantState, InfectedSentinelConnections,InfectedCropConnections>()
+        .each([&](flecs::entity e, Index& plantIndex, MarkovState& state, PlantState &plantState,
+                  InfectedSentinelConnections &sentinelLinks, InfectedCropConnections &cropLinks){
             // update links with crops
             for(int j = 0; j < (int) crops.size(); j++){
                 // if entity is a crop, no link to update
@@ -150,13 +121,16 @@ void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::ve
                     if (e.has(dLink,crops[j])){
                         continue;
                     }
-                    if (e.has(hLink,crops[j])){
-                        e.remove(hLink,crops[j]);
-                        e.add(dLink,crops[j]);
-                    }
+                    // if healthy link:
+                        // both were healthy at t-1
+                        // therefore no chance of either being detectable
                     if (e.has(uLink,crops[j])){
                         e.remove(uLink,crops[j]);
                         e.add(dLink,crops[j]);
+                        if (crops[j].get<MarkovState>().s == detectable) {
+                            cropLinks.d += 1; // only update if the neighbour is detectable
+                            cropLinks.u -= 1;
+                        }
                     }
                 }
                 // check U. if yes, follow above outlined algorithm
@@ -167,6 +141,10 @@ void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::ve
                     if (e.has(hLink,crops[j])){
                         e.remove(hLink,crops[j]); 
                         e.add(uLink,crops[j]);
+                        cropLinks.u += 1;
+                        if (crops[j].get<MarkovState>().s == undetectable) {
+                            cropLinks.u += 1; // only update if the neighbour is undetectable
+                        }
                     }   
                 }
             }  
@@ -181,13 +159,16 @@ void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::ve
                     if (e.has(dLink,sentinels[j])){
                         continue;
                     }
-                    if (e.has(hLink,sentinels[j])){
-                        e.remove(hLink,sentinels[j]);
-                        e.add(dLink,sentinels[j]);
-                    }
+                    // if healthy link:
+                        // both were healthy at t-1
+                        // therefore no chance of either being detectable
                     if (e.has(uLink,sentinels[j])){
                         e.remove(uLink,sentinels[j]);
                         e.add(dLink,sentinels[j]);
+                        if (sentinels[j].get<MarkovState>().s == detectable) {
+                            sentinelLinks.d += 1; // only update if the neighbour is detectable
+                            sentinelLinks.u -= 1;
+                        }
                     }
                 }
                 // check U. if yes, follow above outlined algorithm
@@ -198,6 +179,9 @@ void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::ve
                     if (e.has(hLink,sentinels[j])){
                         e.remove(hLink,sentinels[j]); 
                         e.add(uLink,sentinels[j]);
+                        if (sentinels[j].get<MarkovState>().s == undetectable) {
+                            sentinelLinks.u += 1; // only update if the neighbour is undetectable
+                        }
                     } 
                 }
             }  

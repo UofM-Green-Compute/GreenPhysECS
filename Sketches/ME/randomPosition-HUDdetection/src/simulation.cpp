@@ -72,7 +72,6 @@ void setupSystems(flecs::world &world, std::vector<flecs::entity> &crops, std::v
                   const std::vector<double> infectionRates, const std::vector<double> scalings, 
                   const std::vector<double> &presymptomaticTimes, std::vector<int> &cropPopulation, 
                   std::vector<int> &sentinelPopulation) {
-    updateInfectedNumbers(world, sentinels, crops, uLink, dLink);
     updateProbabilities(world, infectionRates, scalings, presymptomaticTimes);
     transition(world, cropPopulation, sentinelPopulation);
     updateGraph(world, crops, sentinels, hLink, uLink, dLink); 
@@ -131,6 +130,73 @@ void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flec
         for (int k = i+1; k < noCrops; k++){
             addLink(cropPopulation[i], cropPopulation[k], hLink, uLink, dLink, radius);
         }
+    }
+}
+
+void updateConnectionNumbers(std::vector<flecs::entity> &sentinelsVector, 
+                             std::vector<flecs::entity> &cropsVector, flecs::entity &uLink,
+                             flecs::entity &dLink) {
+    
+    for (flecs::entity sentinel : sentinelsVector){
+        InfectedSentinelConnections sentinelLinks = sentinel.get<InfectedSentinelConnections>();
+        sentinelLinks.u=0;
+        sentinelLinks.d=0;
+        for(int sentinelIndex = 0; sentinelIndex < (int) sentinelsVector.size(); sentinelIndex++){
+            if (sentinel == sentinelsVector[sentinelIndex]) {
+                continue; 
+            }
+            if(sentinel.has(uLink,sentinelsVector[sentinelIndex])) { 
+                sentinelLinks.u += 1; 
+            }
+            else if(sentinel.has(dLink,sentinelsVector[sentinelIndex])) { 
+                sentinelLinks.d += 1; 
+            }
+        }
+        sentinel.set<InfectedSentinelConnections>(sentinelLinks);
+
+        InfectedCropConnections cropLinks = sentinel.get<InfectedCropConnections>();
+        cropLinks.u=0;
+        cropLinks.d=0;
+        for(int cropIndex = 0; cropIndex < (int) cropsVector.size(); cropIndex++){
+            if(sentinel.has(uLink,cropsVector[cropIndex])) { 
+                cropLinks.u += 1; 
+            }
+            else if(sentinel.has(dLink,cropsVector[cropIndex])) { 
+                cropLinks.d += 1; 
+            }
+        }
+        sentinel.set<InfectedCropConnections>(cropLinks);
+    }
+    
+    for (flecs::entity crop : cropsVector){
+        InfectedSentinelConnections sentinelLinks = crop.get<InfectedSentinelConnections>();
+        sentinelLinks.u=0;
+        sentinelLinks.d=0;
+        for(int sentinelIndex = 0; sentinelIndex < (int) sentinelsVector.size(); sentinelIndex++){
+            if(crop.has(uLink,sentinelsVector[sentinelIndex])) { 
+                sentinelLinks.u += 1; 
+            }
+            else if(crop.has(dLink,sentinelsVector[sentinelIndex])) { 
+                sentinelLinks.d += 1; 
+            }
+        }
+        crop.set<InfectedSentinelConnections>(sentinelLinks);
+
+        InfectedCropConnections cropLinks = crop.get<InfectedCropConnections>();
+        cropLinks.u=0;
+        cropLinks.d=0;
+        for(int cropIndex = 0; cropIndex < (int) cropsVector.size(); cropIndex++){
+            if (crop == cropsVector[cropIndex]) {
+                continue; 
+            }
+            if(crop.has(uLink,cropsVector[cropIndex])) { 
+                cropLinks.u += 1; 
+            }
+            else if(crop.has(dLink,cropsVector[cropIndex])) { 
+                cropLinks.d += 1; 
+            }
+        }
+        crop.set<InfectedCropConnections>(cropLinks);
     }
 }
 
@@ -203,10 +269,11 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
     if (maxSentinelSample != 0){ // no need to call function if there will be no detecting
         findFirstDetection(sentinelIndices, maxSentinelSample, sentinelVector, firstSentinel);
     }
+    
     if (maxCropSample != 0){
         findFirstDetection(cropIndices, maxCropSample, cropVector, firstCrop);
     }
- 
+    
     // if firstPlant =-1 no detection so don't calculate prevalence or reduce strategy scope
     if (firstSentinel == -1 && firstCrop == -1) {
         return;
@@ -235,8 +302,9 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
     // same crop as their 20th crop)
     // sampleDetectionPrevalence[s]=prevalence (exception if s or c = -1 then no detection)
     int c;
-    for (int s = 0; s <= totalSample; s++) {
-        if (strategyChecker[s]) {
+    for (int s = 1; s < totalSample; s++) {
+        
+        if (strategyChecker[s-1]) {
             // skip if sample was detected in a previous iteration
             continue;
         }
@@ -252,9 +320,9 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
         // strategyChecker bool becomes true, the strategyCounter goes up and the prevalence at
         // the point of detection is recorded
         if (sentinelDetects || cropDetects) {
-            strategyChecker[s] = true;
+            strategyChecker[s-1] = true;
             strategyCounter++;
-            prevalenceVector[s] = prevalence;
+            prevalenceVector[s-1] = prevalence;
         }
     }
     return;
@@ -282,7 +350,7 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
     // Fills the prevalence vector with zeroes so that it is the right size for indexing
     // and initialises the strategyChecker to false for all strategies
     if (baseline == false) {
-        for (int detectionStrategy = 0; detectionStrategy<=sampleSize; detectionStrategy++){
+        for (int detectionStrategy = 1; detectionStrategy<sampleSize; detectionStrategy++){
             sampleDetectionPrevalence.push_back(0);
             strategyChecker.push_back(false);
         }
@@ -318,10 +386,10 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
     flecs::entity detectableLink = world.entity(); // at least one plant is detectable
     setupGraph(sentinels, crops, healthyLink, undetectableLink, detectableLink, totalPopulations[1], 
                totalPopulations[0], radius);
+    updateConnectionNumbers(sentinels, crops, undetectableLink, detectableLink);
     // Create the systems
     setupSystems(world, crops, sentinels, healthyLink, undetectableLink, detectableLink,
                  betas, epsilons, gammas, cropsPopulationVector, sentinelsPopulationVector);
-
     
     // initial time is some random point in [0,Delta]
     double randTimeFraction = dist(rng); 
@@ -342,26 +410,29 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
             // implement surveillance
             baselineSurveillance(crops, cropDetectionIndices, sampleDetectionPrevalence, 
                                  cropsPopulationVector, totalPopulations, maxCropSample, baselineChecker);
+            if (time > 20000) {
+                sampleDetectionPrevalence.clear();
+                sampleDetectionPrevalence.push_back({-1}); // now if function simulate returns -1 you no to rerun
+            }
         }
     } else {
-        while (strategyCounter<=sampleSize) {
-        // infection spread
-        world.progress();
-        time +=1;
-        // if time is not an integer multiple of delta then do not carry out surveillance
-        // and move to the next time step
-        if (time%delta!=0) {
-            continue;
-        }
-        // shuffle the indices for surveillance sampling
-        shuffle(begin(cropDetectionIndices), end(cropDetectionIndices), rng);
-        shuffle(begin(sentinelDetectionIndices), end(sentinelDetectionIndices), rng);
-        // implement surveillance
-        strategySurveillance(sentinels, crops, sentinelDetectionIndices, 
-                                cropDetectionIndices, sampleDetectionPrevalence, 
-                                sampleSize, cropsPopulationVector, totalPopulations, maxSentinelSample, 
-                                maxCropSample, strategyChecker, strategyCounter);  
-    
+        while (strategyCounter<=sampleSize-2) {
+            // infection spread
+            world.progress();
+            time +=1;
+            // if time is not an integer multiple of delta then do not carry out surveillance
+            // and move to the next time step
+            if (time%delta!=0) {
+                continue;
+            }
+            // shuffle the indices for surveillance sampling
+            shuffle(begin(cropDetectionIndices), end(cropDetectionIndices), rng);
+            shuffle(begin(sentinelDetectionIndices), end(sentinelDetectionIndices), rng);
+            // implement surveillance
+            strategySurveillance(sentinels, crops, sentinelDetectionIndices, 
+                                    cropDetectionIndices, sampleDetectionPrevalence, 
+                                    sampleSize, cropsPopulationVector, totalPopulations, maxSentinelSample, 
+                                    maxCropSample, strategyChecker, strategyCounter);
         }
     }
     return sampleDetectionPrevalence;

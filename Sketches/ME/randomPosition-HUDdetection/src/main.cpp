@@ -21,22 +21,22 @@ std::vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
 std::vector<double> GAMMAS = {452, 49};
 
 // Initial Conditions
-std::vector<int> TOTAL_NUMBER = {50, 0}; // total number of plants
+std::vector<int> TOTAL_NUMBER = {100, 5}; // total number of plants
 bool baseline;
 
 // Detection Parameters
 int DELTA = 30;
-int SAMPLE_SIZE = 10;
-double RADIUS = sqrt(2);
+int SAMPLE_SIZE = 5; // surveillance sample not ensemble sample
+double RADIUS = 1.0;
 
 // Sample Parameters
-int sampleNumber = 2000; // total number of samples
+int NUMBER_OF_ENSEMBLE_COPIES = 2; // total number of samples
 
 double findMean(std::vector<std::vector<double>> matrix, int column) {
     int numberRows = matrix.size();
     double sum = 0;
     for (std::vector<double> row:matrix) {
-        sum += row[column];
+        sum += row[column-1];
     }
     return sum/numberRows;
 }
@@ -45,7 +45,7 @@ double findSTD(std::vector<std::vector<double>> matrix, int column, double mean)
     int numberRows = matrix.size();
     double sum = 0;
     for (std::vector<double> row:matrix) {
-        sum += pow((row[column]-mean),2);   
+        sum += pow((row[column-1]-mean),2);   
     }
     return sqrt(sum/(numberRows-1));
 }
@@ -75,9 +75,9 @@ int main(int argc, char* argv[]) {
     // creates directory based on probelm setup
     char DIRECTORYNAMESETUP1[50]; 
     sprintf(DIRECTORYNAMESETUP1, "radius=%.2f", RADIUS);  
-    char DIRECTORYNAMESETUP2[50]; 
-    sprintf(DIRECTORYNAMESETUP2, "Pcrops%d_Psentinels%d", 
-        TOTAL_NUMBER[0], TOTAL_NUMBER[1]);   
+    char DIRECTORYNAMESETUP2[128]; 
+    sprintf(DIRECTORYNAMESETUP2, "Pcrops%d_Psentinels%d_NumberOfEnsembleCopies=%d", 
+        TOTAL_NUMBER[0], TOTAL_NUMBER[1], NUMBER_OF_ENSEMBLE_COPIES);   
     std::filesystem::path setupPath = std::filesystem::path(DIRECTORYNAMESETUP1) / 
                                       std::filesystem::path(DIRECTORYNAMESETUP2);
     std::filesystem::create_directories(setupPath);
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::vector<double>> iterationPrevalence = {}; // store detection prevalence for each sample of this iteration
 
     // Loop over samples
-    for (int sampleCounter = 1; sampleCounter <= sampleNumber; sampleCounter++){
+    for (int sampleCounter = 1; sampleCounter <= NUMBER_OF_ENSEMBLE_COPIES; sampleCounter++){
         double randSickFraction = sickDist(sickRNG);
         if (randSickFraction < TOTAL_NUMBER[0]/totalPlants) {
             SICK_PLANTS = {1, 0};
@@ -104,8 +104,11 @@ int main(int argc, char* argv[]) {
             SICK_PLANTS = {0, 1};
         }
         std::cout<<"Sample = "<<sampleCounter<<std::endl;
-        std::vector<double> sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
-            TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, RADIUS);
+        std::vector<double> sampleDetectionPrevalence;
+   
+        sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
+        TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, RADIUS);
+
         iterationPrevalence.push_back(sampleDetectionPrevalence);
     }
 
@@ -119,7 +122,7 @@ int main(int argc, char* argv[]) {
     } else { 
         MyFileMean << "Number of Sentinels, EDP Mean" << std::endl;
         MyFileSTD << "Number of Sentinels, EDP STD" << std::endl;
-        for (int iteration = 0; iteration <= SAMPLE_SIZE; iteration++){
+        for (int iteration = 1; iteration < SAMPLE_SIZE; iteration++){
             double EDPmean = findMean(iterationPrevalence, iteration);
             double EDPstd = findSTD(iterationPrevalence, iteration, EDPmean);
             MyFileMean << iteration << "," << EDPmean << std::endl;

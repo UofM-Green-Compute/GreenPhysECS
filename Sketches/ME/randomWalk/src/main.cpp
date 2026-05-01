@@ -1,6 +1,5 @@
 /*
-This is a random walk program
-
+main.cpp
 There are 10 systems
 System 1: Add tags to entities depending on if they're on a wall, corner, bulk
 System 2: Move people who are on the left wall
