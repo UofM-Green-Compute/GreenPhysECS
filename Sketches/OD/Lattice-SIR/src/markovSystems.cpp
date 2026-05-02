@@ -5,7 +5,7 @@
 #include <random>
 
 // Tools for picking random numbers 
-std::mt19937 randomNumberGeneratorEpidemics( std::random_device{}()  ) ; 
+std::mt19937 randomNumberGeneratorEpidemics( std::random_device{}() ) ; 
 std::uniform_real_distribution<double> distributionEpidemics(0,1); 
 
 struct MarkovState { int s; }; // Track current markov state of entity
@@ -19,7 +19,7 @@ enum plantType {cropType = 0, sentinelType = 1};
 
 // Count the number of each population type that an entity is connected to 
 void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops,
-    std::vector<flecs::entity> &sentinels, flecs::entity &uLink, flecs::entity &dLink){
+    std::vector<flecs::entity> &sentinels, flecs::entity &Link){
 
     world.system<InfectedSentinelConnections, InfectedCropConnections>()
         .each([&](flecs::entity e, InfectedSentinelConnections &sentinelInfected, 
@@ -27,22 +27,29 @@ void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops,
 
             sentinelInfected.u = 0; 
             sentinelInfected.d = 0;
-
             for(int sentinelIndex = 0; sentinelIndex < (int) sentinels.size(); sentinelIndex++){
-                if(e.has(uLink,sentinels[sentinelIndex])) { 
+                // std::cout<<"Woooaoah "<<e.has(Link,sentinels[sentinelIndex])<<std::endl; 
+                if( e.has(Link,sentinels[sentinelIndex]) && sentinels[sentinelIndex].get<MarkovState>().s == undetectable) { 
+                    sentinelInfected.u += 1;
+                    // std::cout<<"A"<<std::endl; 
                 }
-                else if(e.has(dLink,sentinels[sentinelIndex])) { 
+                else if( e.has(Link,sentinels[sentinelIndex]) && sentinels[sentinelIndex].get<MarkovState>().s == detectable ) { 
                     sentinelInfected.d += 1; 
+                    // std::cout<<"B"<<std::endl; 
                 }
             }
+
             cropInfected.u = 0; 
             cropInfected.d = 0;
             for(int cropIndex = 0; cropIndex < (int) crops.size(); cropIndex++){
-                if(e.has(uLink,crops[cropIndex])) { 
+                // std::cout<<"Woooaoah 2"<<e.has(Link,crops[cropIndex])<<std::endl; 
+                if( e.has(Link,crops[cropIndex]) && crops[cropIndex].get<MarkovState>().s == undetectable ) { 
                     cropInfected.u += 1; 
+                    // std::cout<<"C"<<std::endl; 
                 }
-                else if(e.has(dLink,crops[cropIndex])) { 
+                else if( e.has(Link,crops[cropIndex]) && crops[cropIndex].get<MarkovState>().s == detectable ) { 
                     cropInfected.d += 1; 
+                    // std::cout<<"D"<<std::endl; 
                 }
             }   
     }); 
@@ -101,7 +108,6 @@ void transition(flecs::world &world, std::vector<int> &cropNumbers, std::vector<
             for(int i = 1; i <= (int) p_vector.qnm.size(); i++){
                 probability_sum += p_vector.qnm[i-1];
                 if ((rand < probability_sum)){
-                    
                     if (plantState.type == 0) {
                         cropNumbers[markovState.s-1] -= 1;
                         cropNumbers[i-1] += 1; 
@@ -113,6 +119,5 @@ void transition(flecs::world &world, std::vector<int> &cropNumbers, std::vector<
                     break; 
                 } 
             }
-            
         }); 
     }

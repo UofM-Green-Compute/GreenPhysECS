@@ -11,7 +11,7 @@ int MAX_TIME = 3000; // Maximum Simulation Time
 double RADIUS = 1.5;
 
 // Vectors of form {crops, sentinels}
-std::vector<double> BETAS = {5*pow(10,-1),5*pow(10,-1)}; // daily per capita infection rate
+std::vector<double> BETAS = {5*pow(10,-5),5*pow(10,-5)}; // daily per capita infection rate
 std::vector<double> EPSILONS = {0.015, 0.1}; //scaling parameters
 std::vector<double> GAMMAS = {452, 49};
 
