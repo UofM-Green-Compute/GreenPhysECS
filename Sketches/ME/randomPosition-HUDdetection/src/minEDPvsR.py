@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 Delta = 30
@@ -9,11 +10,11 @@ numberOfEnsembleCopies = 1000
 
 rootFolder = os.path.dirname(os.path.dirname(__file__))
 outputFolder = os.path.join(rootFolder,"outputs")
-savePathEDP = os.path.join(outputFolder, f"EDP(R).pdf")
+savePathFigure = os.path.join(outputFolder, f"EDP(R).pdf")
+savePathData = os.path.join(outputFolder, f"EDP(R).txt")
 
-Rlist = np.array([1.0, 1.2, 1.4]) # radii
-minEDPlist = np.zeros_like(Rlist) # minimum expected detection prevalence 
-minSEMlist = np.zeros_like(Rlist) # Standard Error on the mean for the min EDP case
+Rlist = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.4]) # radii
+saveData = np.empty((0, 3))
 for i, radius in enumerate(Rlist):
     dataFolder = os.path.join(outputFolder,f"radius={radius:.2f}",
                               f"Pcrops{numberOfCrops}_Psentinels{numberOfSentinels}_"
@@ -22,15 +23,19 @@ for i, radius in enumerate(Rlist):
     EDPstdPath = os.path.join(dataFolder, f"EDPstdN={numberOfSentinels},Delta={Delta}.txt")
     EDPmean = np.genfromtxt(EDPMeanPath, delimiter = ',', skip_header = 1)[:,1]
     EDPstd = np.genfromtxt(EDPstdPath, delimiter = ',', skip_header = 1)[:,1]
-    minEDPlist[i] = EDPmean[np.argmin(EDPmean)]
-    minSEMlist[i] = EDPstd[np.argmin(EDPmean)]/np.sqrt(numberOfEnsembleCopies)
-    print(minEDPlist[i])
-    print(minSEMlist[i])
+    minEDP = 100*EDPmean[np.argmin(EDPmean)]
+    minSEM = 100*EDPstd[np.argmin(EDPmean)]/np.sqrt(numberOfEnsembleCopies)
+    saveData = np.vstack([saveData, [radius, minEDP, minSEM]])
+
+
+headers = ['# Radius', 'Expected Disease Prevalence (%)', 'Standard Error']
+EDP_df = pd.DataFrame(saveData, columns=headers)
+EDP_df.to_csv(savePathData, index=False, sep=",")
 
 plt.figure()
-plt.errorbar(Rlist, 100*minEDPlist, 100*minSEMlist, color='k', fmt = 'x', capsize=10)
+plt.errorbar(saveData[:,0], saveData[:,1], saveData[:,2], color='k', fmt = 'x', capsize=5)
 plt.xlabel('Infection Radius')
 plt.ylabel('Minimum Expected Detection Prevalence (%)')
-plt.savefig(savePathEDP)
+plt.savefig(savePathFigure)
 plt.show()
 

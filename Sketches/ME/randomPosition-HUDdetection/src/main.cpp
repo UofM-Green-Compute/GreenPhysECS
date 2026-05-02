@@ -27,10 +27,10 @@ bool baseline;
 // Detection Parameters
 int DELTA = 30;
 int SAMPLE_SIZE = 5; // surveillance sample not ensemble sample
-double RADIUS = 1.0;
+double RADIUS = 1.4;
 
 // Sample Parameters
-int NUMBER_OF_ENSEMBLE_COPIES = 2; // total number of samples
+int NUMBER_OF_ENSEMBLE_COPIES = 1000; // total number of samples
 
 double findMean(std::vector<std::vector<double>> matrix, int column) {
     int numberRows = matrix.size();
