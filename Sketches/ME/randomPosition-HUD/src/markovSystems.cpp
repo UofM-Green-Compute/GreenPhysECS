@@ -18,34 +18,44 @@ struct InfectedCropConnections { int u,d; }; // No. of infected crops an individ
 enum states {healthy = 1, undetectable = 2, detectable = 3};
 enum plantType {cropType = 0, sentinelType = 1};
 
-void updateInfectedNumbers(flecs::world &world, std::vector<flecs::entity> &sentinels,
-    std::vector<flecs::entity> &crops, flecs::entity &uLink, flecs::entity &dLink){
-    world.system<InfectedSentinelConnections, InfectedCropConnections>()
-        .each([&](flecs::entity e, InfectedSentinelConnections &sentinelInfected, 
-                  InfectedCropConnections &cropInfected){
+void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops, 
+                 std::vector<flecs::entity> &sentinels, flecs::entity &link) {
+    world.system<InfectedSentinelConnections,InfectedCropConnections>()
+        .each([&](flecs::entity e, InfectedSentinelConnections &sentinelLinks, 
+                  InfectedCropConnections &cropLinks){
             
-            sentinelInfected.u = 0; 
-            sentinelInfected.d = 0;
-            for(int sentinelIndex = 0; sentinelIndex < (int) sentinels.size(); sentinelIndex++){
-                if(e.has(uLink,sentinels[sentinelIndex])) { 
-                    sentinelInfected.u += 1; 
+            int numberLinks = 0;
+            // update links with crops
+            cropLinks.u=0;
+            cropLinks.d=0;
+            for(int j = 0; j < (int) crops.size(); j++){
+                if (e.has(link,crops[j]) == false){
+                    continue;
                 }
-                else if(e.has(dLink,sentinels[sentinelIndex])) { 
-                    sentinelInfected.d += 1; 
+                numberLinks += 1;
+                if (crops[j].get<MarkovState>().s == detectable){
+                    cropLinks.d += 1;
+                } else if (crops[j].get<MarkovState>().s == undetectable){
+                    cropLinks.u += 1;
                 }
             }
-            cropInfected.u = 0; 
-            cropInfected.d = 0;
-            for(int cropIndex = 0; cropIndex < (int) crops.size(); cropIndex++){
-                if(e.has(uLink,crops[cropIndex])) { 
-                    cropInfected.u += 1; 
+            
+            // update links with sentinels
+            sentinelLinks.u=0;
+            sentinelLinks.d=0;
+            for(int j = 0; j < (int) sentinels.size(); j++){
+                if (e.has(link,sentinels[j]) == false){
+                    continue;
                 }
-                else if(e.has(dLink,crops[cropIndex])) { 
-                    cropInfected.d += 1; 
+                numberLinks += 1;
+                if (sentinels[j].get<MarkovState>().s == detectable){
+                    sentinelLinks.d += 1;
+                } else if (sentinels[j].get<MarkovState>().s == undetectable){
+                    sentinelLinks.u += 1;
                 }
-            }    
+            }
         }); 
-}
+    }
 
 void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, const std::vector<double> &scalings, 
     const std::vector<double> &presymptomaticTimes) {
@@ -119,87 +129,5 @@ void transition(flecs::world &world, std::vector<int> &cropsPopulation, std::vec
                 break;    
             }
             //std::cout<<"system 1\n";
-        }); 
-    }
-
-void updateGraph(flecs::world &world, std::vector<flecs::entity> &crops, std::vector<flecs::entity> &sentinels,
-                 flecs::entity &hLink, flecs::entity &uLink, flecs::entity &dLink) {
-    // Update the links between entities
-
-    // if entity in D
-        // if e.has(hlink) or e.has(uLink) -----> remove link and add dLink
-        // if e.has(dLink) -----> do nothing
-
-
-    // if entity in U
-        // if e.has(hLink) -----> remove hLink and add uLink
-        // if e.has(uLink) or e.has(dLink) ----> do nothing
-
-    // only change e.has not plant[index].has because that might mess with thing if
-    // systems run parallel in future
-    world.system<Index, MarkovState, PlantState>()
-        .each([&](flecs::entity e, Index& plantIndex, MarkovState& state, PlantState &plantState){
-            // update links with crops
-            for(int j = 0; j < (int) crops.size(); j++){
-                // if entity is a crop, no link to update
-                // check D. if yes, follow above outlined algorithm
-                if (plantIndex.plantNumber == j && plantState.type == cropType){
-                    continue;
-                }
-                if (state.s == detectable || crops[j].get<MarkovState>().s == detectable) {
-                    if (e.has(dLink,crops[j])){
-                        continue;
-                    }
-                    if (e.has(hLink,crops[j])){
-                        e.remove(hLink,crops[j]);
-                        e.add(dLink,crops[j]);
-                    }
-                    if (e.has(uLink,crops[j])){
-                        e.remove(uLink,crops[j]);
-                        e.add(dLink,crops[j]);
-                    }
-                }
-                // check U. if yes, follow above outlined algorithm
-                if (state.s == undetectable || crops[j].get<MarkovState>().s == undetectable) {
-                    if (e.has(uLink,crops[j])||e.has(dLink,crops[j])){
-                        continue;
-                    }
-                    if (e.has(hLink,crops[j])){
-                        e.remove(hLink,crops[j]); 
-                        e.add(uLink,crops[j]);
-                    }   
-                }
-            }  
-            // update links with sentinels
-            for(int j = 0; j < (int) sentinels.size(); j++){
-                // if entity is a crop, no link to update
-                if (plantIndex.plantNumber == j && plantState.type == sentinelType){
-                    continue;
-                }
-                                // check D. if yes, follow above outlined algorithm
-                if (state.s == detectable || sentinels[j].get<MarkovState>().s == detectable) {
-                    if (e.has(dLink,sentinels[j])){
-                        continue;
-                    }
-                    if (e.has(hLink,sentinels[j])){
-                        e.remove(hLink,sentinels[j]);
-                        e.add(dLink,sentinels[j]);
-                    }
-                    if (e.has(uLink,sentinels[j])){
-                        e.remove(uLink,sentinels[j]);
-                        e.add(dLink,sentinels[j]);
-                    }
-                }
-                // check U. if yes, follow above outlined algorithm
-                if (state.s == undetectable || sentinels[j].get<MarkovState>().s == undetectable) {
-                    if (e.has(uLink,sentinels[j])||e.has(dLink,sentinels[j])){
-                        continue;
-                    }
-                    if (e.has(hLink,sentinels[j])){
-                        e.remove(hLink,sentinels[j]); 
-                        e.add(uLink,sentinels[j]);
-                    } 
-                }
-            }  
         }); 
     }

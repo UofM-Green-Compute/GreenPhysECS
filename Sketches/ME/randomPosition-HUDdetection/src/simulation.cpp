@@ -224,7 +224,7 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
     // same crop as their 20th crop)
     // sampleDetectionPrevalence[s]=prevalence (exception if s or c = -1 then no detection)
     int c;
-    for (int s = 1; s < totalSample; s++) {
+    for (int s = 1; s < totalSample; s++) { // s = 1 in randomPosition case
         
         if (strategyChecker[s-1]) {
             // skip if sample was detected in a previous iteration
@@ -307,8 +307,8 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
     setupGraph(sentinels, crops, networkLink, totalPopulations[1], 
                totalPopulations[0], radius);
     // Create the systems
-    setupSystems(world, crops, sentinels, networkLink,betas, epsilons, gammas, 
-        cropsPopulationVector, sentinelsPopulationVector);
+    setupSystems(world, crops, sentinels, networkLink, betas, epsilons, gammas, 
+                 cropsPopulationVector, sentinelsPopulationVector);
     
     // initial time is some random point in [0,Delta]
     double randTimeFraction = dist(rng); 

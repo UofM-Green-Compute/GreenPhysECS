@@ -22,7 +22,7 @@ std::vector<int> SICK_PLANTS = {3, 0}; //total number of sick plants
 // Sample Parameters
 int sampleCounter1 = 1; // Set sample counter = 1
 int sampleCounter2 = 1; // Set sample counter = 1
-int sampleNumber = 100; // total number of samples
+int sampleNumber = 1000; // total number of samples
 
 int main(int argc, char* argv[]) {
     /*

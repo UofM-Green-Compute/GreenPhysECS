@@ -38,10 +38,11 @@ For the SIR model:
 #include <random>
 
 int N = 100;
-double t = 0; // Set time = 0
 double W1; // Transition rate for infection
 double W2; // Transition rate for recovery
 double lambda; // Decay rate used to find event time
+
+int sampleNumber = 100;
 
 // initial (nS, nI, nR)
 std::vector<int> population = {N-1, 1, 0};
@@ -65,19 +66,20 @@ double generateTau(double generatingLambda)
     return tau;
 }
 
-int main() {
-
-    std::ofstream MyFile; // Create file variable
-    MyFile.open("SIRmacroscopic.txt"); // Open text file called "SIR.txt"
-    if (!MyFile.is_open()) // Ensure file created correctly
-    {
-        std::cout<<"Error in creating file"<<std::endl; 
-        return 1;
-    }
-    MyFile << "Time,Susceptible,Infected,Recovered" << std::endl; // Set column labels
-    MyFile << t << "," << population[0] << "," << population[1] << "," << 
-        population[2] << std::endl; // Initial data
-
+void simulate(std::string filename1, std::string filename2, std::string filename3) {
+    int t = 0;
+    std::ofstream MyFileSusceptible;
+    MyFileSusceptible.open(filename1);
+    std::ofstream MyFileInfected;
+    MyFileSusceptible.open(filename2);
+    std::ofstream MyFileRecovered;
+    MyFileSusceptible.open(filename3);
+    MyFileSusceptible << "#Time,Susceptible" << std::endl;
+    MyFileInfected << "#Time,Infected" << std::endl;
+    MyFileRecovered << "#Time,Recovered" << std::endl;
+    MyFileSusceptible<< t << "," << population[0] << std::endl;
+    MyFileInfected<< t << "," << population[1] << std::endl;
+    MyFileRecovered<< t << "," << population[2] << std::endl;
     while (population[1]>0) {
         W1 = Beta * population[0] * population[1]; // Transition rate (infection)
         W2 = Gamma * population[1]; // Transition rate (Recovery)
@@ -95,10 +97,27 @@ int main() {
             population[1] -= 1;
             population[2] += 1;
         }
-        std::cout << t << "," << population[0] << "," << population[1] << "," << 
-        population[2] <<"\n";
-        MyFile << t << "," << population[0] << "," << population[1] << "," << 
-        population[2] << std::endl;
+        MyFileSusceptible<< t << "," << population[0] << std::endl;
+        MyFileInfected<< t << "," << population[1] << std::endl;
+        MyFileRecovered<< t << "," << population[2] << std::endl;
     }
-    MyFile.close();
+    MyFileSusceptible.close();
+    MyFileInfected.close();
+    MyFileRecovered.close();
+}
+
+int main() {
+    int sampleCounter = 1;
+    while (sampleCounter <= sampleNumber){
+        char FILENAME1[50]; 
+        char FILENAME2[50]; 
+        char FILENAME3[50];        
+        sprintf(FILENAME1, "susceptible_%d.txt", sampleCounter);
+        sprintf(FILENAME2, "infected_%d.txt", sampleCounter);
+        sprintf(FILENAME3, "Recovered_%d.txt", sampleCounter);
+        std::cout<<"Sample = "<< sampleCounter <<std::endl;
+        simulate(FILENAME1, FILENAME2, FILENAME3);  
+        sampleCounter += 1;  
+    }
+    
 }

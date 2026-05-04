@@ -20,18 +20,19 @@ enum plantType {cropType = 0, sentinelType = 1};
 
 void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops, 
                  std::vector<flecs::entity> &sentinels, flecs::entity &link) {
-    world.system<InfectedSentinelConnections,InfectedCropConnections>()
+    world.system<InfectedSentinelConnections,InfectedCropConnections, Index>()
         .each([&](flecs::entity e, InfectedSentinelConnections &sentinelLinks, 
-                  InfectedCropConnections &cropLinks){
+                  InfectedCropConnections &cropLinks, Index &plantIndex){
             
+            int numberLinks = 0;
             // update links with crops
             cropLinks.u=0;
             cropLinks.d=0;
             for(int j = 0; j < (int) crops.size(); j++){
-                if (e.has(link,crops[j] == false)){
+                if (e.has(link,crops[j]) == false){
                     continue;
                 }
-                
+                numberLinks += 1;
                 if (crops[j].get<MarkovState>().s == detectable){
                     cropLinks.d += 1;
                 } else if (crops[j].get<MarkovState>().s == undetectable){
@@ -43,9 +44,10 @@ void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops,
             sentinelLinks.u=0;
             sentinelLinks.d=0;
             for(int j = 0; j < (int) sentinels.size(); j++){
-                if (e.has(link,sentinels[j] == false)){
+                if (e.has(link,sentinels[j]) == false){
                     continue;
                 }
+                numberLinks += 1;
                 if (sentinels[j].get<MarkovState>().s == detectable){
                     sentinelLinks.d += 1;
                 } else if (sentinels[j].get<MarkovState>().s == undetectable){

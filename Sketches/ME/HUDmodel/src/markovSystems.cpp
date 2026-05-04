@@ -1,3 +1,4 @@
+// markovSystems.cpp
 #include <flecs.h>
 #include <systems.h>
 #include <iostream>
@@ -17,8 +18,8 @@ std::vector<double> calculateProbabilities(std::vector<int> &crop_vector, std::v
     std::vector<double> &presymptomaticTimesVector, int &plantType){
     //std::cout<< state << "\n"; 
     std::vector<double> probabilities = {0, 0, 0};
-    double infectionForce = InfectionRatesVector[0] * (scalingsVector[0] * crop_vector[0] + crop_vector[1])
-                          + InfectionRatesVector[1] * (scalingsVector[1] * sentinel_vector[0] + sentinel_vector[1]);
+    double infectionForce = InfectionRatesVector[0] * (scalingsVector[0] * crop_vector[1] + crop_vector[2])
+                          + InfectionRatesVector[1] * (scalingsVector[1] * sentinel_vector[1] + sentinel_vector[2]);
     if (state == 1){
         double q21 = infectionForce;
         double q11 = 1-q21;
@@ -78,7 +79,6 @@ void transition(flecs::world &world, std::vector<int> &cropsPopulation, std::vec
             for(int i = 1; i <= (int) p_vector.qnm.size(); i++){
                 probability_sum += p_vector.qnm[i-1];
                 if ((rand < probability_sum)){
-                    
                     if (plantState.type == 0) {
                         cropsPopulation[markovState.s-1] -= 1;
                         cropsPopulation[i-1] += 1; 

@@ -3,6 +3,6 @@
 #include <vector>
 #include <fstream>
 
-int simulate(int argc, char* argv[], const std::vector<double> betas, const std::vector<double> epsilons, 
+std::vector<std::vector<int>> simulate(int argc, char* argv[], const std::vector<double> betas, const std::vector<double> epsilons, 
     const std::vector<double> gammas, std::vector<int> totalPopulations, std::vector<int> U0,
-    const int maxTime, std::string filename1, std::string filename2, double radius);
+    const int maxTime, double radius);
