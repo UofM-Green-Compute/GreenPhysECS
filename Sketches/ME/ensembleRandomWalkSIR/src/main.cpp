@@ -42,7 +42,7 @@ int sampleCounter = 1; // Set sample counter = 1
 int sampleNumber = 100; // total number of samples
 
 // Transition constants
-double beta = 10 / static_cast<double>(numberOfPeople); // infection rate
+double beta = 7 / static_cast<double>(numberOfPeople); // infection rate
 double alpha = 0.001; // recovery rate
 
 // initial populations (n1, n2, n3)

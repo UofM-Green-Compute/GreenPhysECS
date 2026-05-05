@@ -28,7 +28,7 @@ bool baseline;
 int DELTA = 30;
 int SAMPLE_SIZE = 5; // surveillance sample not ensemble sample
 
-std::vector<double> RADIUSVECTOR = {0.25};
+std::vector<double> RADIUSVECTOR = {0.21, 0.22, 0.23, 0.24};
 // Sample Parameters
 int NUMBER_OF_ENSEMBLE_COPIES = 1000; // total number of samples
 
