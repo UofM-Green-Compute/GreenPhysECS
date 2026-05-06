@@ -1,0 +1,5 @@
+Number of Sentinels, EDP Mean
+1,0.01089
+2,0.01126
+3,0.01195
+4,0.01406

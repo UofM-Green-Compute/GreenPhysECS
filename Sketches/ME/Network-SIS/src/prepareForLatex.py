@@ -17,6 +17,7 @@ with open(input_path, "r") as f:
                 data[i].append(tuple(int(x) for x in line))
 
 edges = data[40]
+print(edges)
 
 G = nx.Graph()
 G.add_edges_from(edges)
@@ -30,3 +31,4 @@ with open(output_path1, "w") as f:
 with open(output_path2, "w") as f:
     for node, (x, y) in pos.items():
         f.write(f"\\node ({node}) at ({x:.4f},{y:.4f}) {{}};\n")
+print(pos)

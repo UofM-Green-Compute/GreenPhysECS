@@ -10,7 +10,7 @@
 double X_LIM = 1;
 double Y_LIM = 1;
 double C = 1; // Ratio A / B
-double PSI = 2 * M_PI / 3; // Allowed values: 0 <= PSI <= PI (radians)
+double PSI = M_PI / 2; // Allowed values: 0 <= PSI <= PI (radians)
 
 // Initialise components (Note that the sum of qnm for each component must equal 1)
 struct Index { int plantNumber; }; // what is your index within your vector

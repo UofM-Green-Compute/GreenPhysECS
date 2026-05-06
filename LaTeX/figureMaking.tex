@@ -14,6 +14,8 @@
 \definecolor{matplotlibBlue}{RGB}{31, 119, 191}  
 \definecolor{matplotlibOrange}{RGB}{255, 127, 14}  
 \definecolor{matplotlibGreen}{RGB}{44, 160, 44}  
+\definecolor{definedBlue}{HTML}{56B4E9}
+\definecolor{definedOrange}{HTML}{D55E00}
 \begin{document}
 
 \section{Markov Chain Diagrams}
@@ -385,5 +387,193 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[h!]
+    \centering
+
+    \begin{tikzpicture}[
+        >=stealth,
+        node distance=5cm,
+        roundnode/.style={circle, draw=black, very thick, minimum size=2cm}
+    ]
+    
+        \node [roundnode] (State1) {$H$};
+        \node [roundnode] (State3) [below right of= State1, yshift=-1cm] {$D$};
+        \node [roundnode] (State2) [above right of= State3, yshift=1cm] {$U$};
+
+        \path[->,very thick] (State1) edge [ bend left ] node [ above ] {\Large $q_{21}$} (State2) ;
+        \path[->,very thick] (State1) edge [ loop above, out=125,in=55,distance=2cm ] node [ above ] {\Large $q_{11} = 1 - q_{21}$} (State1) ;
+        \path[->,very thick] (State2) edge [ loop above, out=125,in=55,distance=2cm ] node [ above ] {\Large $q_{22}$} (State2) ;
+        \path[->,very thick] (State2) edge [ bend left ] node [ right ] {\Large $q_{32}$} (State3) ;
+        \path[->,very thick] (State3) edge [ loop below, out=-125,in=-55,distance=2cm ] node [ below ] {\Large $q_{33}$} (State3) ;
+        
+    \end{tikzpicture}
+
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.5*\textwidth,  
+    height=10cm,
+    enlarge x limits=false,
+    xlabel = Number of Sentinels,
+    ylabel = Change in EDP from baseline (\%)
+    ]
+    \addplot [color = black,
+              mark = x,
+              mark size = 3pt,
+              only marks,
+              error bars/.cd,
+                y dir=both,
+                y explicit,]
+    table[x = Number of Sentinels,
+          y = Change in EDP from baseline,
+          y error =Standard Error,
+          col sep = comma]
+    {EDPchange.txt};
+\end{axis}
+\end{tikzpicture}
+\caption{}
+\label{fig:EDPchange}
+\end{figure}
+
+
+\begin{figure}
+        \centering
+        \begin{tikzpicture}
+
+         \draw (0,0) -- (4,0) -- (4,4) -- (0,4) -- (0,0);
+
+         \node at (0,-0.5) {$0$};
+         \node at (4,-0.5) {$1$};
+         \node at (-0.5,0) {$0$};
+         \node at (-0.5,4) {$1$};
+
+         \draw [thick,red] (2,2) circle (1cm) node[above right] {$r$};
+         \draw[->,thick,red](2,2) -- (2.94,2.34);
+         \filldraw (2,2) circle (3pt);
+         
+         \filldraw (0.6, 1.06) circle(3pt);
+         \filldraw (3.7, 2.9) circle(3pt);
+         \filldraw (0.8, 2.2) circle(3pt);
+         \filldraw (3.1, 0.5) circle(3pt);
+         \filldraw [red] (1.3, 1.8) circle(3pt);
+         \filldraw (2.5, 0.9) circle(3pt);
+         \filldraw (3.2, 2) circle(3pt);
+         \filldraw [red] (1.7, 2.6) circle(3pt);
+         \filldraw (1, 3.5) circle(3pt);
+         \filldraw (2.5, 3.7) circle(3pt);
+         \filldraw (1.25, 0.7) circle(3pt);
+
+         \draw (0.6, 1.06) -- (1.25, 0.7);
+         \draw (0.8, 2.2) -- (1.3, 1.8);
+         \draw (0.8, 2.2) -- (1.7, 2.6);
+         \draw (1.3, 1.8) -- (1.7, 2.6);
+         \draw (3.1, 0.5) -- (2.5, 0.9);
+         \draw (2, 2) -- (1.7, 2.6);
+         \draw (2, 2) -- (1.3, 1.8);
+         
+         
+        \end{tikzpicture}
+        \label{SPH Scheme Diagram}
+    \caption{\normalsize{Figure depicting plants randomly plotted in a 1 x 1 area. Plants within some radius, $r$, of each other are linked on a network. Linked plants can spread the infection to one another.}}
+    
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+
+    \begin{tikzpicture}
+    \begin{axis}[
+        hide axis,
+        xmin=0, xmax=1,
+        ymin=0, ymax=1,
+        legend columns=3,
+        legend style={draw=none},
+    ]
+        \addplot [color=black, mark=x, only marks] coordinates {(0,0)};
+        \addplot [color=definedBlue, mark=square*, only marks] coordinates {(0,0)};
+        \addplot [draw=none] coordinates {(0,0)};
+        \legend{Random, Square, Future}
+    \end{axis}
+    \end{tikzpicture}
+
+    \vspace{0.5cm}
+
+    \begin{subfigure}{.48\linewidth}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        enlarge x limits=false,
+        xlabel = R/L,
+        ylabel = Expected Disease Prevalence (\%)
+    ]
+        \addplot [color = black,
+                  mark = x,
+                  mark size = 3pt,
+                  only marks,
+                  mark options={line width=1pt},
+                  error bars/.cd,
+                    y dir=both,
+                    y explicit,
+                    error bar style={line width=1pt}]
+        table[x = Radius,
+              y = Expected Disease Prevalence,
+              y error = Standard Error,
+              col sep = comma]
+        {EDP(R)_Random_Out.txt};
+
+        \addplot [
+            color = definedBlue,
+            only marks,
+            mark = square*,
+            mark size = 3pt,
+            error bars/.cd,
+                y dir=both,
+                y explicit,
+                error bar style={line width=1pt}
+        ]
+        table[
+            x = Radius,
+            y = Expected Disease Prevalence,
+            y error = Standard Error,
+            col sep = comma
+        ]
+        {EDP(R)_Square_Out.txt};
+    \end{axis}
+    \end{tikzpicture}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{.48\linewidth}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        enlarge x limits=false,
+        xlabel = R/L,
+        ylabel = Expected Disease Prevalence (\%)
+    ]
+        \addplot [color = black,
+                  mark = x,
+                  mark size = 3pt,
+                  only marks,
+                  mark options={line width=1pt},
+                  error bars/.cd,
+                    y dir=both,
+                    y explicit,
+                    error bar style={line width=1pt}]
+        table[x = Radius,
+              y = Expected Disease Prevalence,
+              y error = Standard Error,
+              col sep = comma]
+        {EDP(R)_Random_In.txt};
+    \end{axis}
+    \end{tikzpicture}
+    \end{subfigure}
+
+\caption{Microscopic SIR model with 100,000 people. System starts from 1 infection and 99,999 susceptible.}
+\label{fig:EDP(R)}
+\end{figure}
+
 
 \end{document}

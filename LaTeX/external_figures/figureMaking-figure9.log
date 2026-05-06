@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.12.11)  25 APR 2026 13:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.12.11)  5 MAY 2026 15:32
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -695,6 +695,21 @@ Overfull \hbox (2.61108pt too wide) in paragraph at lines 254--349
 
 A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
 isable this.
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
+A tikzpicture has been optimized away. Use '/tikz/external/optimize=false' to d
+isable this.
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
@@ -704,10 +719,10 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 25750 strings out of 476182
- 681257 string characters out of 5795594
+ 25756 strings out of 476182
+ 681485 string characters out of 5795594
  2419348 words of memory out of 5000000
- 47351 multiletter control sequences out of 15000+600000
+ 47357 multiletter control sequences out of 15000+600000
  562019 words of font info for 49 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  88i,12n,96p,782b,2240s stack positions out of 10000i,1000n,20000p,200000b,200000s
