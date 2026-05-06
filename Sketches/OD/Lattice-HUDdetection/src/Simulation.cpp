@@ -16,7 +16,7 @@ double PSI = M_PI / 2; // Allowed values: 0 <= PSI <= PI (radians)
 struct Index { int plantNumber; }; // what is your index within your vector
 struct MarkovState { int s; }; // Track current markov state of entity
 struct PlantState { int type; }; // 0: crop. 1: sentinel
-struct TransitionProbabilities { std::vector<double> qnm; }; // Transition from state m to state n = 1,2,3
+struct TransitionProbabilities { std::vector<double> qnm; }; // Transition probabiities from state m to state n = 1,2,3
 struct GridPoint { double x,y; }; // Location of the plant in the lattice
 struct InfectedSentinelConnections { int u,d; }; // No. of infected sentinels an individual is connected to. u:undetectable, d:detectable
 struct InfectedCropConnections { int u,d; }; // No. of infected crops an individual is connected to. u:undetectable, d:detectable
@@ -33,7 +33,7 @@ std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string f
     
     // Open files 
     std::ofstream MyFile; 
-    MyFile.open(filename); 
+    MyFile.open(filename);
 
     // Create a vector to store the lattice positions
     std::vector<std::vector<double>> GridPoints; 
@@ -49,20 +49,35 @@ std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string f
 
     int count = 0; 
     int j = 0; 
-    while ( (y >= 0) && (y <= Y_LIM-(b * sin(PSI))) ){
-        if(PSI > M_PI / 2){ x = j * b * -cos(PSI); }
-        else{x = j * b * cos(PSI); }
+    while ( (y >= 0) && (y <= Y_LIM) ){
+
+        // Find a valid x position for a row 
+        if(PSI > M_PI / 2) { x = j * b * -cos(PSI); }
+        else{ x = j * b * cos(PSI); } 
+
+        // Backtrack to the first points within the limits on that row
         backtrack = std::floor(x/a); 
         x = x - backtrack * a; 
+
+        // Set the value of y
         y = j * b * sin(PSI);
-        while( ((x >= 0) && x <= (X_LIM-a)) && (count < totalPopulation) ){
-            MyFile << x << "," << y << "|" ; 
+
+        // Loop through values of x on that row and store data
+        while( (x >= 0) && x <= (X_LIM) && (count < totalPopulation) ){
+
+            MyFile << x << "," << y << "|" ;  
             GridPoints.push_back({x,y}); 
+
             count += 1; 
+            if( x > (X_LIM-a) ) { break; }
             x+=a; 
+
         }
-        j+=1; 
+
         MyFile << std::endl; 
+        if( y > (Y_LIM-(b * sin(PSI))) ) { break; }
+        j+=1; 
+
     }
 
     MyFile.close(); 
@@ -74,6 +89,7 @@ std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string f
     return setupLattice(totalPopulation, filename, no_columns+1); 
 }
 
+// Initialise the entities
 void setupEntities(flecs::world world, std::vector<flecs::entity> &p, std::vector<std::vector<double>> &GridPoints, 
     int populationSize, int initialInfected, int plantType){
 
@@ -123,10 +139,8 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, std::vecto
     }
 }
 
+// Set up the components in the world
 void setupComponents(flecs::world world){
-
-    std::cout<<"6"<<std::endl; 
-
     world.component<Index>();
     world.component<MarkovState>();
     world.component<PlantState>();
@@ -136,6 +150,7 @@ void setupComponents(flecs::world world){
     world.component<GridPoint>(); 
 }
 
+// Find the distance between two plants (Pythagoras theorem)
 double findPlantDistance (flecs::entity plant1, flecs::entity plant2) {
 
     double deltaX;
@@ -149,6 +164,7 @@ double findPlantDistance (flecs::entity plant1, flecs::entity plant2) {
     return distance;
 }
 
+// Add a link between two plants, if they are within some radius of each other
 void addLink(flecs::entity plant1, flecs::entity plant2, flecs::entity Link, double radius){
 
     // Get distance between plants 
@@ -162,6 +178,7 @@ void addLink(flecs::entity plant1, flecs::entity plant2, flecs::entity Link, dou
     }
 }
 
+// Set up a network, linking plants within some radius of each other
 void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flecs::entity> &cropPopulation,
                 flecs::entity Link, int noCrops, int noSentinels, double radius){
 
@@ -185,6 +202,7 @@ void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flec
     }
 }
 
+// Call the functions (from markovSystems.cpp) containing the systems for this world
 void setupSystems(flecs::world &world, std::vector<flecs::entity> &cropPopulation, std::vector<flecs::entity> &sentinelPopulation,
     std::vector<int> &cropNumbers, std::vector<int> &sentinelNumbers, const std::vector<double> &infectionRates, std::vector<double> &scalings, 
     std::vector<double> &presymptomaticTimes, flecs::entity &Link) {
@@ -194,15 +212,15 @@ void setupSystems(flecs::world &world, std::vector<flecs::entity> &cropPopulatio
     transition(world, cropNumbers, sentinelNumbers);
 }
 
-void findFirstDetection(std::vector<int> &indices, int &maxSample, 
-                    const std::vector<flecs::entity> &plantVector, int &firstPlant) {
+// Find the first detectable plant from a randomly shuffled vector of all the plants
+void findFirstDetection(std::vector<int> &indices, int &maxSample, const std::vector<flecs::entity> &plantVector, int &firstPlant) {
     /*
-    - This function return the index of the first plant in the sample to detect an infection. 
-    - This means the number of plants of that type in a sample is firstPlant + 1. 
+    - This function return the index of the first detectable plant in a sample. This is the first plant in the sample 
+      that will be detected with the infection. 
+    - This means the minimum number of plants of that type (crop or sentinel) in a sample is firstPlant + 1. 
     - Because all strategies look at the same plant as their nth plant, all strategies which check
       firstPlant + 1 or more of this plant type will detect the outbreak.
-    - If, however, this function returns firstPlant = -1, then that means
-      there was no detection by any strategy.
+    - If, however, this function returns firstPlant = -1, then that means there was no detection by any strategy.
     */
     for (int i = 0; i < maxSample; i++) { // check however many plants are needed to cover all strategies
         int index = indices[i]; // this tells you which index plant in the plantVector is the i'th plant to check
@@ -244,8 +262,8 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
                           int &maxCropSample, std::vector<bool> &strategyChecker, 
                           int &strategyCounter) {
     /*
-    This function looks for infected crops and sentinels. If there are infected crops and/or
-    sentinels in a surveillance sample, all samples with that many crops/sentinels or more will
+    - This function looks for infected crops and sentinels. 
+    - If there are infected crops and/or sentinels in a surveillance sample, all samples with that many crops/sentinels or more will
     detect the infection because I do not shuffle between surveillance samples, only between time steps.
     This is because it saves computational time, and any shuffle is valid as long as it changes in time.
 
@@ -255,11 +273,10 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
     double prevalence;
     int firstSentinel = -1;
     int firstCrop = -1;
-    // for information on what firstCrop and firstSentinel do, see findFirstDetection
+    
     if (maxSentinelSample != 0){ // no need to call function if there will be no detecting
         findFirstDetection(sentinelIndices, maxSentinelSample, sentinelVector, firstSentinel);
     }
-    
     if (maxCropSample != 0){
         findFirstDetection(cropIndices, maxCropSample, cropVector, firstCrop);
     }

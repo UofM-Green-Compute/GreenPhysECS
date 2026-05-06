@@ -49,6 +49,7 @@ void countNeighbours(flecs::world &world, std::vector<flecs::entity> &crops,
     }); 
 }
 
+// Update the probabilities vector for each entity
 void updateProbabilities(flecs::world &world, const std::vector<double> &infectionRates, const std::vector<double> &scalings, 
     const std::vector<double> &presymptomaticTimes) {
     /*
@@ -86,6 +87,7 @@ void updateProbabilities(flecs::world &world, const std::vector<double> &infecti
         }); 
 }
 
+// Transition an entity from one markov state to another
 void transition(flecs::world &world, std::vector<int> &cropNumbers, std::vector<int> &sentinelNumbers) {
     /*
     This decides which new state the entity should transition to. This depends only on its

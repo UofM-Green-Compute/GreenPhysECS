@@ -27,10 +27,11 @@ bool baseline;
 // Detection Parameters
 int DELTA = 30;
 int SAMPLE_SIZE = 5; // surveillance sample not ensemble sample
-std::vector<double> RADIUS_VECTOR = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.4}; 
+double epsilon = 1 * pow(10,-8); 
+std::vector<double> RADIUS_VECTOR = {0,0.05}; 
 
 // Sample Parameters
-int NUMBER_OF_ENSEMBLE_COPIES = 100; // total number of samples
+int NUMBER_OF_ENSEMBLE_COPIES = 1000; // total number of samples
 
 double findMean(std::vector<std::vector<double>> matrix, int column) {
     int numberRows = matrix.size();
@@ -106,11 +107,11 @@ int main(int argc, char* argv[]) {
             } else {
                 SICK_PLANTS = {0, 1};
             }
-            std::cout<<"Sample = "<<sampleCounter<<std::endl;
+            std::cout<<"Radius = "<<radius<<", "<<"Sample = "<<sampleCounter<<std::endl;
             std::vector<double> sampleDetectionPrevalence;
     
             sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
-            TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, radius, FILENAME);
+            TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, radius + epsilon, FILENAME);
 
             iterationPrevalence.push_back(sampleDetectionPrevalence);
         }
