@@ -2,9 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt 
 
-############################################################################
 root_folder = os.path.dirname(os.path.dirname(__file__))
-file = os.path.join(root_folder,"outputs","Lattice-Grid.txt")
+file = os.path.join(root_folder,"outputs","hi.txt")
 Grid_File = open(file)
 
 grid_points = []
@@ -25,6 +24,5 @@ for line in grid_points:
 
 figLattice, axLattice = plt.subplots()
 axLattice.scatter(x_vals,y_vals)
-############################################################################
 
 plt.show()

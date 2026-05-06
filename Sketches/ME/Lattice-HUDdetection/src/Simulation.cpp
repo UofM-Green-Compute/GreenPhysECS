@@ -16,7 +16,7 @@ double PSI = M_PI / 2; // Allowed values: 0 <= PSI <= PI (radians)
 struct Index { int plantNumber; }; // what is your index within your vector
 struct MarkovState { int s; }; // Track current markov state of entity
 struct PlantState { int type; }; // 0: crop. 1: sentinel
-struct TransitionProbabilities { std::vector<double> qnm; }; // Transition from state m to state n = 1,2,3
+struct TransitionProbabilities { std::vector<double> qnm; }; // Transition probabiities from state m to state n = 1,2,3
 struct GridPoint { double x,y; }; // Location of the plant in the lattice
 struct InfectedSentinelConnections { int u,d; }; // No. of infected sentinels an individual is connected to. u:undetectable, d:detectable
 struct InfectedCropConnections { int u,d; }; // No. of infected crops an individual is connected to. u:undetectable, d:detectable
@@ -29,57 +29,125 @@ std::mt19937 rng( std::random_device{}() );
 std::uniform_real_distribution<double> dist(0,1); 
 
 // Recursive function to setup the lattice 
-std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string filename, int no_columns){
+std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string filename){
     
+    // maximum number of iterations
+    int maxIteration = 100;
+    // very small number to handle edge cases
+    double epsilon = pow(10,-7);
+
     // Open files 
     std::ofstream MyFile; 
-    MyFile.open(filename); 
+    MyFile.open(filename);  
 
-    // Create a vector to store the lattice positions
-    std::vector<std::vector<double>> GridPoints; 
+    // As the iteration continues, lower_a and lower_b will be the highest values of 
+    // a and b yet found which fit all grid point. while upper_a and upper_b will
+    // be lowest values of a and b yet found which do not fit all grid points. these 
+    // will converge on the best a and b. after 100 iterations, lower_a and lower_b 
+    // will be chosen
+    double lower_a = 0;
+    double lower_b = 0;
+    double upper_a = 1;
+    double upper_b = C * upper_a; 
 
-    // Calculate lattice parameters
-    double a = X_LIM / (double(no_columns)-1); 
-    double b = C * a; 
-
-    // Define terms for later use 
-    int backtrack = 0; 
-    double x = 0; 
-    double y = 0; 
-
-    int count = 0; 
-    int j = 0; 
-    while ( (y >= 0) && (y <= Y_LIM) ){
-        if(PSI > M_PI / 2){ x = j * b * -cos(PSI); }
-        else{x = j * b * cos(PSI); }
-        backtrack = std::floor(x/a); 
-        x = x - backtrack * a; 
-        y = j * b * sin(PSI);
-        while( ((x >= 0) && x <= (X_LIM)) && (count < totalPopulation) ){
-            MyFile << x << "," << y << "|" ; 
-            GridPoints.push_back({x,y}); 
-            count += 1; 
-            if (x > (X_LIM-a)) {
-               break; 
+    double iteration_a = 1;
+    double iteration_b = C * iteration_a; 
+    for (int iterationCounter = 0; iterationCounter <= maxIteration; iterationCounter++){
+        // Define terms for later use 
+        double x = 0; 
+        double y = 0; 
+        int count = 0; 
+        int j = 0;
+        while ( (y > -epsilon) && (y < Y_LIM+epsilon) ){
+            // Find a valid x position for a row 
+            if(PSI > M_PI / 2) { 
+                x = j * iteration_b * -cos(PSI); 
             }
-            x+=a; 
+            else{ 
+                x = j * iteration_b * cos(PSI); 
+            } 
+            // Backtrack to the first points within the limits on that row
+            while (x > iteration_a-epsilon) {
+                x-=iteration_a;
+            }
+            // Set the value of y
+            y = j * iteration_b * sin(PSI);
+            while( (x > -epsilon) && x <= (X_LIM+epsilon) && (count < totalPopulation) ){
+
+                count += 1; 
+                if( x > (X_LIM-iteration_a) ) { 
+                    break; 
+                }
+                x+=iteration_a; 
+
+            }
+            if(y > (Y_LIM-(iteration_b*sin(PSI)))){ break; }
+            j+=1; 
         }
-        MyFile << std::endl; 
-        if (y > (Y_LIM-(b * sin(PSI)))) {
-            break; 
+        if (count < totalPopulation){
+            // too few gridpoints: a and b are too large
+            upper_a = iteration_a;
+            upper_b = iteration_b;
+            // take midpoint between currend and lower bound
+            iteration_a = (lower_a+iteration_a)/2;
+            iteration_b = C*iteration_a;
         }
-        j+=1; 
+        if (count >= totalPopulation){
+            // enough to fit: a and b too small or just right
+            lower_a = iteration_a;
+            lower_b = iteration_b;
+            // take midpoint between currend and lower bound
+            iteration_a = (upper_a+iteration_a)/2;
+            iteration_b = C*iteration_a;
+        }
     }
 
+    // now pick lower_a and lower_b as the highest survivors which can fit everything
+    double x = 0; 
+    double y = 0; 
+    int count = 0; 
+    int j = 0;
+    // Create a vector to store the lattice positions
+    std::vector<std::vector<double>> GridPoints; 
+    while ( (y > -epsilon) && (y < Y_LIM+epsilon) ){
+        // Find a valid x position for a row 
+        if(PSI > M_PI / 2) { 
+            x = j * lower_b * -cos(PSI); 
+        }
+        else{ 
+            x = j * lower_b * cos(PSI); 
+        } 
+        // Backtrack to the first points within the limits on that row
+        while (x > lower_a-epsilon) {
+            x-=lower_a;
+        }
+        // Set the value of y
+        y = j * lower_b * sin(PSI);
+        // Loop through values of x on that row and store data
+        int xCount = 0;
+        while( (x >= -epsilon) && x <= (X_LIM+epsilon) && (count < totalPopulation) ){
+            std::cout<<"aaaaaaaaa: " << lower_a<<std::endl;
+            std::cout<<"xxxxxxxxx: " << x<<std::endl;
+
+            MyFile << x << "," << y << "|";
+            GridPoints.push_back({x, y});
+            count += 1;
+            if( x > (X_LIM-lower_a) ) { break; }
+            x += lower_a;
+        }
+        MyFile << std::endl; 
+        if(y > (Y_LIM-(lower_b*sin(PSI)))){ break; }
+        j+=1; 
+    }
+    std::cout<<"Gridpoint 4: "<<GridPoints[3][0]<<", "<<GridPoints[3][1]<<std::endl;;
+
+    
     MyFile.close(); 
 
-    // Base case 
-    if(count == totalPopulation){ return GridPoints; } 
-
-    // Recursive call 
-    return setupLattice(totalPopulation, filename, no_columns+1); 
+    return GridPoints;
 }
 
+// Initialise the entities
 void setupEntities(flecs::world world, std::vector<flecs::entity> &p, std::vector<std::vector<double>> &GridPoints, 
     int populationSize, int initialInfected, int plantType){
 
@@ -129,6 +197,7 @@ void setupEntities(flecs::world world, std::vector<flecs::entity> &p, std::vecto
     }
 }
 
+// Set up the components in the world
 void setupComponents(flecs::world world){
     world.component<Index>();
     world.component<MarkovState>();
@@ -139,6 +208,7 @@ void setupComponents(flecs::world world){
     world.component<GridPoint>(); 
 }
 
+// Find the distance between two plants (Pythagoras theorem)
 double findPlantDistance (flecs::entity plant1, flecs::entity plant2) {
 
     double deltaX;
@@ -152,6 +222,7 @@ double findPlantDistance (flecs::entity plant1, flecs::entity plant2) {
     return distance;
 }
 
+// Add a link between two plants, if they are within some radius of each other
 void addLink(flecs::entity plant1, flecs::entity plant2, flecs::entity Link, double radius){
 
     // Get distance between plants 
@@ -165,6 +236,7 @@ void addLink(flecs::entity plant1, flecs::entity plant2, flecs::entity Link, dou
     }
 }
 
+// Set up a network, linking plants within some radius of each other
 void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flecs::entity> &cropPopulation,
                 flecs::entity Link, int noCrops, int noSentinels, double radius){
 
@@ -188,6 +260,7 @@ void setupGraph(std::vector<flecs::entity> &sentinelPopulation, std::vector<flec
     }
 }
 
+// Call the functions (from markovSystems.cpp) containing the systems for this world
 void setupSystems(flecs::world &world, std::vector<flecs::entity> &cropPopulation, std::vector<flecs::entity> &sentinelPopulation,
     std::vector<int> &cropNumbers, std::vector<int> &sentinelNumbers, const std::vector<double> &infectionRates, std::vector<double> &scalings, 
     std::vector<double> &presymptomaticTimes, flecs::entity &Link) {
@@ -197,15 +270,15 @@ void setupSystems(flecs::world &world, std::vector<flecs::entity> &cropPopulatio
     transition(world, cropNumbers, sentinelNumbers);
 }
 
-void findFirstDetection(std::vector<int> &indices, int &maxSample, 
-                    const std::vector<flecs::entity> &plantVector, int &firstPlant) {
+// Find the first detectable plant from a randomly shuffled vector of all the plants
+void findFirstDetection(std::vector<int> &indices, int &maxSample, const std::vector<flecs::entity> &plantVector, int &firstPlant) {
     /*
-    - This function return the index of the first plant in the sample to detect an infection. 
-    - This means the number of plants of that type in a sample is firstPlant + 1. 
+    - This function return the index of the first detectable plant in a sample. This is the first plant in the sample 
+      that will be detected with the infection. 
+    - This means the minimum number of plants of that type (crop or sentinel) in a sample is firstPlant + 1. 
     - Because all strategies look at the same plant as their nth plant, all strategies which check
       firstPlant + 1 or more of this plant type will detect the outbreak.
-    - If, however, this function returns firstPlant = -1, then that means
-      there was no detection by any strategy.
+    - If, however, this function returns firstPlant = -1, then that means there was no detection by any strategy.
     */
     for (int i = 0; i < maxSample; i++) { // check however many plants are needed to cover all strategies
         int index = indices[i]; // this tells you which index plant in the plantVector is the i'th plant to check
@@ -247,8 +320,8 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
                           int &maxCropSample, std::vector<bool> &strategyChecker, 
                           int &strategyCounter) {
     /*
-    This function looks for infected crops and sentinels. If there are infected crops and/or
-    sentinels in a surveillance sample, all samples with that many crops/sentinels or more will
+    - This function looks for infected crops and sentinels. 
+    - If there are infected crops and/or sentinels in a surveillance sample, all samples with that many crops/sentinels or more will
     detect the infection because I do not shuffle between surveillance samples, only between time steps.
     This is because it saves computational time, and any shuffle is valid as long as it changes in time.
 
@@ -258,11 +331,10 @@ void strategySurveillance(const std::vector<flecs::entity> &sentinelVector,
     double prevalence;
     int firstSentinel = -1;
     int firstCrop = -1;
-    // for information on what firstCrop and firstSentinel do, see findFirstDetection
+    
     if (maxSentinelSample != 0){ // no need to call function if there will be no detecting
         findFirstDetection(sentinelIndices, maxSentinelSample, sentinelVector, firstSentinel);
     }
-    
     if (maxCropSample != 0){
         findFirstDetection(cropIndices, maxCropSample, cropVector, firstCrop);
     }
@@ -378,7 +450,7 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
     setupComponents(world);
 
     // Set up the lattice 
-    std::vector<std::vector<double>> gridPoints = setupLattice(PopulationSize, filename3, 2);  
+    std::vector<std::vector<double>> gridPoints = setupLattice(PopulationSize, filename3);  
 
     // Create a crop and sentinels vector and generate entities
     std::vector<flecs::entity> crops;

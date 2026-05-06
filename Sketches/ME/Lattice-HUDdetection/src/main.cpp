@@ -27,14 +27,11 @@ bool baseline;
 // Detection Parameters
 int DELTA = 30;
 int SAMPLE_SIZE = 5; // surveillance sample not ensemble sample
-double smallDistance = pow(10,-8); // stop floating point error
- std::vector<double> RADIUS_VECTOR = {0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18,
-                                      0.19, 0.2, 0.21, 0.22, 0.23, 0.24, 0.25, 0.3, 0.35, 0.4, 0.45,
-                                      0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1,
-                                      1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4};
+double epsilon = 1 * pow(10,-8); 
+std::vector<double> RADIUS_VECTOR = {0.1}; 
 
 // Sample Parameters
-int NUMBER_OF_ENSEMBLE_COPIES = 1000; // total number of samples
+int NUMBER_OF_ENSEMBLE_COPIES = 1; // total number of samples
 
 double findMean(std::vector<std::vector<double>> matrix, int column) {
     int numberRows = matrix.size();
@@ -74,13 +71,12 @@ int main(int argc, char* argv[]) {
     }
 
     // Create file to store grid
-    std::string FILENAME = "Lattice-Grid.txt"; 
+    std::string FILENAME = "hi.txt"; 
 
     std::vector<int> SICK_PLANTS; //total number of sick plants
     double totalPlants = TOTAL_NUMBER[0] + TOTAL_NUMBER[1];
 
     for(double radius : RADIUS_VECTOR){
-        radius = radius + smallDistance;
 
         // creates directory based on probelm setup
         char DIRECTORYNAMESETUP1[50]; 
@@ -111,11 +107,11 @@ int main(int argc, char* argv[]) {
             } else {
                 SICK_PLANTS = {0, 1};
             }
-            std::cout<<"Radius = "<< radius << ", Sample = "<<sampleCounter<<std::endl;
+            std::cout<<"Radius = "<<radius<<", "<<"Sample = "<<sampleCounter<<std::endl;
             std::vector<double> sampleDetectionPrevalence;
     
             sampleDetectionPrevalence = simulate(argc, argv, BETAS, EPSILONS, GAMMAS, 
-            TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, radius, FILENAME);
+            TOTAL_NUMBER, SICK_PLANTS, SAMPLE_SIZE, DELTA, baseline, radius + epsilon, FILENAME);
 
             iterationPrevalence.push_back(sampleDetectionPrevalence);
         }
