@@ -1,4 +1,4 @@
-# Radius,Expected Disease Prevalence (%),Standard Error
+Radius,Expected Disease Prevalence,Standard Error
 0.1,1.0659999999999998,0.013850491546548086
 0.11,1.054,0.013974231471390475
 0.12,1.082,0.014052529466256247
