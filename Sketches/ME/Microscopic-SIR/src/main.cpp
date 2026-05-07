@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include "simulation.h"
+#include <ccenergy/EnergyTracker.hpp>
 
 // Initial Conditions
 int NO_PEOPLE = 100; // Total number of people
@@ -27,6 +28,12 @@ int main(int argc, char* argv[]) {
     */
 
     // Start measuring run time of program
+    
+    ccenergy::EnergyTracker energy_tracker {{ .label = "OnUpdate",
+                                              .measure_cpu = true,
+                                              .measure_gpu  = false,
+                                              .log_to_stdout = false }};
+    energy_tracker.start();
     clock_t tClock; 
     tClock = clock(); 
 
@@ -40,8 +47,15 @@ int main(int argc, char* argv[]) {
         simulate(argc, argv, beta, alpha, NO_PEOPLE, I0, timeStep, maxTime, filename); // Run Simulation
         sampleCounter1 += 1; // increase sample counter
     }
+    
     // Record How long the simulation took
     tClock = clock() - tClock; 
     double time_taken = ((double)tClock) / CLOCKS_PER_SEC;  
     std::cout<<"RUN TIME: "<<time_taken<<"s"<<std::endl;
+
+    // stop energy tracking
+    auto r = energy_tracker.stop();
+
+    // Reporting the information from the energy tracker
+    std::cout << energy_tracker.mkReport() << std::endl;
 }
