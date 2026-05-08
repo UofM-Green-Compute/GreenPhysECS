@@ -15,6 +15,7 @@ Oluwole Delano
 #include <fstream>
 #include <random>
 #include <time.h> 
+#include <ccenergy/EnergyTracker.hpp>
 
 int TIME_STEPS = 200; 
 
@@ -60,6 +61,13 @@ struct state3 { double q13, q23, q33, q43; }; // "State 3 - Infected"
 struct state4 { double q14, q24, q34, q44; }; // "State 4 - Recovered"
 
 int main(int argc, char* argv[]) {
+
+    // Start energy tracking 
+    ccenergy::EnergyTracker energy_tracker {{ .label = "OnUpdate", 
+                                              .measure_cpu = true, 
+                                              .measure_gpu = false, 
+                                              .log_to_stdout = false }}; 
+    energy_tracker.start(); 
 
     // Start measuring run time of program
     clock_t t; 
@@ -246,5 +254,11 @@ int main(int argc, char* argv[]) {
     t = clock() - t; 
     double time_taken = ((double)t) / CLOCKS_PER_SEC;
     std::cout<<"RUN TIME: "<<time_taken<<"s"<<std::endl;
+
+    // Stop energy tracking 
+    auto r = energy_tracker.stop(); 
+
+    // Report energy tracking data
+    std::cout<<energy_tracker.mkReport()<<std::endl; 
     
 }

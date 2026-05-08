@@ -10,7 +10,7 @@
 double X_LIM = 1;
 double Y_LIM = 1;
 double C = 1; // Ratio A / B
-double PSI = M_PI / 2; // Allowed values: 0 <= PSI <= PI (radians)
+double PSI = 2 * M_PI / 3; // Allowed values: 0 <= PSI <= PI (radians)
 
 // Initialise components (Note that the sum of qnm for each component must equal 1)
 struct Index { int plantNumber; }; // what is your index within your vector
@@ -28,65 +28,118 @@ enum plantType {cropType = 0, sentinelType = 1};
 std::mt19937 rng( std::random_device{}() ); 
 std::uniform_real_distribution<double> dist(0,1); 
 
-// Recursive function to setup the lattice 
-std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string filename, int no_columns){
+// Function to setup the lattice 
+std::vector<std::vector<double>> setupLattice(int totalPopulation, std::string filename){
     
+    // maximum number of iterations
+    int maxIteration = 100;
+    // very small number to handle edge cases
+    double epsilon = pow(10,-7);
+
     // Open files 
     std::ofstream MyFile; 
-    MyFile.open(filename);
+    MyFile.open(filename);  
 
-    // Create a vector to store the lattice positions
-    std::vector<std::vector<double>> GridPoints; 
+    // As the iteration continues, lower_a and lower_b will be the highest values of 
+    // a and b yet found which fit all grid point. while upper_a and upper_b will
+    // be lowest values of a and b yet found which do not fit all grid points. these 
+    // will converge on the best a and b. after 100 iterations, lower_a and lower_b 
+    // will be chosen
+    double lower_a = 0;
+    double upper_a = X_LIM;
+    double upper_b = C * upper_a; 
 
-    // Calculate lattice parameters
-    double a = X_LIM / (double(no_columns)-1); 
-    double b = C * a; 
+    double iteration_a = X_LIM;
+    double iteration_b = C * iteration_a; 
+    for (int iterationCounter = 0; iterationCounter <= maxIteration; iterationCounter++){
+        // Define terms for later use 
+        double x = 0; 
+        double y = 0; 
+        int count = 0; 
+        int j = 0;
+        while ( (y > -epsilon) && (y < Y_LIM+epsilon) ){
+            // Find a valid x position for a row 
+            if(PSI > M_PI / 2) { 
+                x = j * iteration_b * -cos(PSI); 
+            }
+            else{ 
+                x = j * iteration_b * cos(PSI); 
+            } 
+            // Backtrack to the first points within the limits on that row
+            while (x > iteration_a-epsilon) {
+                x-=iteration_a;
+            }
+            // Set the value of y
+            y = j * iteration_b * sin(PSI);
+            while( (x > -epsilon) && x <= (X_LIM+epsilon) && (count < totalPopulation) ){
 
-    // Define terms for later use 
-    int backtrack = 0; 
-    double x = 0; 
-    double y = 0; 
+                count += 1; 
+                if( x > (X_LIM-iteration_a) ) { 
+                    break; 
+                }
+                x+=iteration_a; 
 
-    int count = 0; 
-    int j = 0; 
-    while ( (y >= 0) && (y <= Y_LIM) ){
-
-        // Find a valid x position for a row 
-        if(PSI > M_PI / 2) { x = j * b * -cos(PSI); }
-        else{ x = j * b * cos(PSI); } 
-
-        // Backtrack to the first points within the limits on that row
-        backtrack = std::floor(x/a); 
-        x = x - backtrack * a; 
-
-        // Set the value of y
-        y = j * b * sin(PSI);
-
-        // Loop through values of x on that row and store data
-        while( (x >= 0) && x <= (X_LIM) && (count < totalPopulation) ){
-
-            MyFile << x << "," << y << "|" ;  
-            GridPoints.push_back({x,y}); 
-
-            count += 1; 
-            if( x > (X_LIM-a) ) { break; }
-            x+=a; 
-
+            }
+            if(y > (Y_LIM-(iteration_b*sin(PSI)))){ break; }
+            j+=1; 
         }
-
-        MyFile << std::endl; 
-        if( y > (Y_LIM-(b * sin(PSI))) ) { break; }
-        j+=1; 
-
+        if (count < totalPopulation){
+            // too few gridpoints: a and b are too large
+            upper_a = iteration_a;
+            upper_b = iteration_b;
+            // take midpoint between currend and lower bound
+            iteration_a = (lower_a+iteration_a)/2;
+            iteration_b = C*iteration_a;
+        }
+        if (count >= totalPopulation){
+            // enough to fit: a and b too small or just right
+            lower_a = iteration_a;
+            // take midpoint between currend and lower bound
+            iteration_a = (upper_a+iteration_a)/2;
+            iteration_b = C*iteration_a;
+        }
     }
 
+    // now pick lower_a and lower_b as the highest survivors which can fit everything
+    double lower_b = C*lower_a; 
+    double x = 0; 
+    double y = 0; 
+    int count = 0; 
+    int j = 0;
+    // Create a vector to store the lattice positions
+    std::vector<std::vector<double>> GridPoints; 
+    while ( (y > -epsilon) && (y < Y_LIM+epsilon) ){
+        // Find a valid x position for a row 
+        if(PSI > M_PI / 2) { 
+            x = j * lower_b * -cos(PSI); 
+        }
+        else{ 
+            x = j * lower_b * cos(PSI); 
+        } 
+        // Backtrack to the first points within the limits on that row
+        while (x > lower_a-epsilon) {
+            x-=lower_a;
+        }
+        // Set the value of y
+        y = j * lower_b * sin(PSI);
+        // Loop through values of x on that row and store data
+        int xCount = 0;
+        while( (x >= -epsilon) && x <= (X_LIM+epsilon) && (count < totalPopulation) ){
+
+            MyFile << x << "," << y << "|";
+            GridPoints.push_back({x, y});
+            count += 1;
+            if( x > (X_LIM-lower_a) ) { break; }
+            x += lower_a;
+        }
+        MyFile << std::endl; 
+        if(y > (Y_LIM-(lower_b*sin(PSI)))){ break; }
+        j+=1; 
+    }
+    
     MyFile.close(); 
 
-    // Base case 
-    if(count == totalPopulation){ return GridPoints; } 
-
-    // Recursive call 
-    return setupLattice(totalPopulation, filename, no_columns+1); 
+    return GridPoints;
 }
 
 // Initialise the entities
@@ -392,7 +445,7 @@ std::vector<double> simulate(int argc, char* argv[], const std::vector<double> &
     setupComponents(world);
 
     // Set up the lattice 
-    std::vector<std::vector<double>> gridPoints = setupLattice(PopulationSize, filename3, 2);  
+    std::vector<std::vector<double>> gridPoints = setupLattice(PopulationSize, filename3);  
 
     // Create a crop and sentinels vector and generate entities
     std::vector<flecs::entity> crops;
