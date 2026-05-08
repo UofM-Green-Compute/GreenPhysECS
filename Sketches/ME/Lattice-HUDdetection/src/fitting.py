@@ -45,13 +45,13 @@ for lowerIndex in range(len(hexagonBoundaries) - 1):
     df = pd.DataFrame(saveData, columns=['Radius', 'Mean EDP'])
     df.to_csv(savePath, index=False, sep=",")
 
-for lowerIndex in range(len(randomBoundaries) - 1):
-    lowerBoundary = randomBoundaries[lowerIndex]
-    upperBoundary = randomBoundaries[lowerIndex + 1]
+for lowerIndex in range(len(squareBoundaries) - 1):
+    lowerBoundary = squareBoundaries[lowerIndex]
+    upperBoundary = squareBoundaries[lowerIndex + 1]
     radii = np.array([])
     data  = np.array([])
 
-    for radiusIndex, radius in enumerate(randomRadius):
+    for radiusIndex, radius in enumerate(squareRadius):
         if lowerBoundary <= radius < upperBoundary:
             data  = np.append(data, squareMean[radiusIndex])
             radii = np.append(radii, radius)
